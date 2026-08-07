@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Products</title>
+
+  <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="admin-products.css">
+</head>
+<body>
+
+<nav class="admin-nav">
+  <a href="admin-dashboard.html">📊 Dashboard</a>
+  <a href="admin-products.html" class="active">📦 Products</a>
+  <a href="admin.html">🧾 Orders</a>
+  <a href="admin-users.html">👥 Users</a>
+  <a href="home.html">🏠 Store</a>
+</nav>
+
+<h1>📦 Admin Product Manager</h1>
+
+<form id="productForm">
+
+  <label>Select Product Image</label>
+
+<input
+  type="file"
+  id="imageFile"
+  accept="image/*"
+  required
+>
+
+<br><br>
+
+<img
+  id="preview"
+  width="180"
+  style="display:none;border-radius:10px;"
+>
+
+  <input
+    type="text"
+    id="productName"
+    placeholder="Product Name"
+    required
+  >
+
+  <input
+    type="text"
+    id="category"
+    placeholder="Category"
+    required
+  >
+
+  <input
+    type="number"
+    id="price"
+    placeholder="Price"
+    required
+  >
+
+  <input
+    type="number"
+    id="stock"
+    placeholder="Stock Quantity"
+    min="0"
+    required
+  >
+
+  <textarea
+    id="description"
+    placeholder="Description"
+    required
+  ></textarea>
+
+  <button type="submit">
+    Save Product
+  </button>
+
+</form>
+
+<hr>
+
+<h2>All Products</h2>
+
+<div id="products"></div>
+
+<script type="module" src="admin-products.js"></script>
+
+</body>
+</html>

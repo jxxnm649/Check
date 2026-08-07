@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bestify Store</title>
+
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="home.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Welcome to Bestify Store 🎉</h1>
+
+        <p id="welcome"></p>
+
+        <p class="success">Login Successful ✅</p>
+
+        <!-- Banner Slider -->
+        <div class="banner-slider" id="bannerSlider">
+            <div class="banner-track" id="bannerTrack"></div>
+            <div class="banner-dots" id="bannerDots"></div>
+        </div>
+
+        <!-- Search -->
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Search Products">
+        </div>
+
+        <!-- Categories -->
+        <div class="category-bar" id="categoryBar"></div>
+
+        <!-- Featured / Best Sellers -->
+        <h2 id="featuredTitle" class="section-title" style="display:none;">⭐ Best Sellers</h2>
+        <div id="featuredContainer" class="products"></div>
+
+        <!-- Products -->
+        <h2 class="section-title">Our Products</h2>
+
+        <div id="productContainer" class="products">
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+
+        <a href="home.html" class="active">
+            <span>🏠</span>
+            <p>Home</p>
+        </a>
+
+        <a href="wishlist.html">
+            <span>❤️</span>
+            <p>Wishlist</p>
+        </a>
+
+        <a href="orders.html">
+            <span>📦</span>
+            <p>Orders</p>
+        </a>
+
+        <a href="profile.html">
+            <span>👤</span>
+            <p>Profile</p>
+        </a>
+
+        <a href="admin.html">
+            <span>☰</span>
+            <p>More</p>
+        </a>
+
+    </nav>
+
+    <script type="module" src="home.js"></script>
+    <script type="module" src="logout.js"></script>
+
+</body>
+
+</html>

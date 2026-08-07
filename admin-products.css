@@ -1,0 +1,22 @@
+body{
+    padding: 20px;
+}
+
+h1, h2{
+    text-align: center;
+}
+
+form{
+    max-width: 600px;
+    margin: 20px auto;
+}
+
+#preview{
+    display: block;
+    margin: 10px auto;
+}
+
+#products{
+    padding: 0;
+    margin-top: 20px;
+}

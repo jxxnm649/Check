@@ -1,0 +1,48 @@
+body{
+    padding: 0 20px 20px;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+h1{
+    text-align: center;
+}
+
+.user-row{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 16px 18px;
+    margin-bottom: 12px;
+}
+
+.user-info h3{
+    font-size: 15px;
+    margin: 0 0 3px;
+}
+
+.user-info p{
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 2px 0;
+}
+
+.user-joined{
+    font-family: var(--font-mono);
+    font-size: 11px !important;
+}
+
+.badge{
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.badge-admin{ background: var(--marigold); color: var(--ink); }
+.badge-user{ background: var(--paper-dim); color: var(--ink-soft); }

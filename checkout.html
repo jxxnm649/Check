@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout</title>
+
+  <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Checkout</h1>
+
+<div id="orderSummary" class="order-summary"></div>
+
+<form id="checkoutForm">
+
+  <input
+    type="text"
+    id="customerName"
+    placeholder="Full Name"
+    required
+  >
+
+  <input
+    type="tel"
+    id="mobile"
+    placeholder="Mobile Number"
+    required
+  >
+
+  <textarea
+    id="address"
+    placeholder="Delivery Address"
+    required
+  ></textarea>
+
+  <div class="payment-methods">
+    <label class="payment-option">
+      <input type="radio" name="paymentMethod" value="online" checked>
+      <span>💳 Pay Online (Razorpay)</span>
+    </label>
+    <label class="payment-option">
+      <input type="radio" name="paymentMethod" value="cod">
+      <span>💵 Cash on Delivery</span>
+    </label>
+  </div>
+
+  <button type="submit" id="placeOrderBtn">
+    Place Order
+  </button>
+
+</form>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script type="module" src="checkout.js"></script>
+
+</body>
+</html>

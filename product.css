@@ -1,0 +1,16 @@
+.card{
+    max-width: 500px;
+    margin: 30px auto;
+}
+
+.card img{
+    height: 320px;
+}
+
+.card-content{
+    padding: 20px;
+}
+
+.price{
+    font-size: 22px;
+}

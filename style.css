@@ -1,0 +1,86 @@
+body{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+form{
+    width: 320px;
+}
+
+h1{
+    text-align: center;
+    font-size: 22px;
+}
+
+/* Products Page (legacy grid, kept for pages still using it) */
+
+.products-grid{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+/* ---------- Order summary (checkout) ---------- */
+.order-summary{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    padding: 16px 20px;
+    margin: 16px 0;
+    max-width: 320px;
+}
+
+.summary-row{
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--ink-soft);
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--line);
+}
+
+.summary-row:last-child{ border-bottom: none; }
+
+.summary-total{
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--ink);
+    font-size: 16px;
+    padding-top: 10px;
+}
+
+/* ---------- Payment method selector (checkout) ---------- */
+.payment-methods{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 14px 0;
+}
+
+.payment-option{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: border-color .15s;
+}
+
+.payment-option input{
+    width: auto;
+    margin: 0;
+    accent-color: var(--marigold-deep);
+}
+
+.payment-option:has(input:checked){
+    border-color: var(--marigold-deep);
+    background: var(--paper-dim);
+}
