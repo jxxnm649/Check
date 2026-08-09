@@ -1,0 +1,224 @@
+import { auth, db } from "./firebase.js";
+
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const form = document.getElementById("checkoutForm");
+const summaryEl = document.getElementById("orderSummary");
+
+let currentUser = null;
+
+const params = new URLSearchParams(window.location.search);
+const buyNowProductId = params.get("productId");
+
+onAuthStateChanged(auth, (user) => {
+
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  currentUser = user;
+  renderSummary();
+
+});
+
+// Fetch the items that will be ordered (Buy Now product OR full cart)
+async function getOrderItems() {
+
+  const products = [];
+  let cartSnapshot = null;
+
+  if (buyNowProductId) {
+
+    const productSnap = await getDoc(doc(db, "products", buyNowProductId));
+
+    if (!productSnap.exists()) {
+      return { products: [], cartSnapshot: null };
+    }
+
+    products.push({ ...productSnap.data(), qty: 1 });
+
+  } else {
+
+    cartSnapshot = await getDocs(
+      collection(db, "users", currentUser.uid, "cart")
+    );
+
+    cartSnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      products.push({ ...data, qty: data.qty || 1 });
+    });
+
+  }
+
+  return { products, cartSnapshot };
+
+}
+
+function calcTotal(products) {
+  return products.reduce(
+    (sum, item) => sum + Number(item.price) * Number(item.qty || 1),
+    0
+  );
+}
+
+async function renderSummary() {
+
+  const { products } = await getOrderItems();
+
+  if (products.length === 0) {
+    summaryEl.innerHTML = `<p class="no-results">Your Cart is Empty 🛒</p>`;
+    form.querySelector("button[type=submit]").disabled = true;
+    return;
+  }
+
+  const total = calcTotal(products);
+
+  summaryEl.innerHTML = `
+    ${products.map(p => `
+      <div class="summary-row">
+        <span>${p.productName} ${p.qty > 1 ? `× ${p.qty}` : ""}</span>
+        <span>₹${Number(p.price) * Number(p.qty || 1)}</span>
+      </div>
+    `).join("")}
+    <div class="summary-row summary-total">
+      <span>Total</span>
+      <span>₹${total}</span>
+    </div>
+  `;
+
+}
+
+form.addEventListener("submit", async (e) => {
+
+  e.preventDefault();
+
+  const customerName = document.getElementById("customerName").value;
+  const mobile = document.getElementById("mobile").value;
+  const address = document.getElementById("address").value;
+  const paymentMethod = document.querySelector(
+    'input[name="paymentMethod"]:checked'
+  ).value;
+
+  const placeOrderBtn = document.getElementById("placeOrderBtn");
+
+  try {
+
+    const { products, cartSnapshot } = await getOrderItems();
+
+    if (products.length === 0) {
+      alert(buyNowProductId ? "Product Not Found" : "Your Cart is Empty");
+      return;
+    }
+
+    const totalAmount = calcTotal(products);
+
+    async function saveOrderAndFinish(extra = {}) {
+
+      const orderRef = await addDoc(collection(db, "orders"), {
+
+        userId: currentUser.uid,
+        customerName,
+        mobile,
+        address,
+        products,
+        total: totalAmount,
+        paymentMethod,
+        status: "Pending",
+        createdAt: new Date(),
+        ...extra
+
+      });
+
+      if (!buyNowProductId && cartSnapshot) {
+
+        for (const cartDoc of cartSnapshot.docs) {
+          await deleteDoc(
+            doc(db, "users", currentUser.uid, "cart", cartDoc.id)
+          );
+        }
+
+      }
+
+      window.location.href = `payment-success.html?orderId=${orderRef.id}&method=${paymentMethod}`;
+
+    }
+
+    // ---------- Cash on Delivery ----------
+    if (paymentMethod === "cod") {
+
+      placeOrderBtn.disabled = true;
+      placeOrderBtn.textContent = "Placing Order...";
+
+      await saveOrderAndFinish();
+      return;
+
+    }
+
+    // ---------- Online Payment (Razorpay) ----------
+    const options = {
+
+      key: "rzp_test_TL1OXROVimUJpK",
+
+      amount: totalAmount * 100,
+
+      currency: "INR",
+
+      name: "Bestify Store",
+
+      description: "Product Purchase",
+
+      handler: async function (response) {
+
+        try {
+
+          await saveOrderAndFinish({
+            paymentId: response.razorpay_payment_id
+          });
+
+        } catch (error) {
+          console.log(error);
+          window.location.href = "payment-failed.html";
+        }
+
+      },
+
+      modal: {
+        ondismiss: function () {
+          window.location.href = "payment-failed.html";
+        }
+      },
+
+      theme: {
+        color: "#14213D"
+      }
+
+    };
+
+    const rzp = new Razorpay(options);
+
+    rzp.on("payment.failed", function () {
+      window.location.href = "payment-failed.html";
+    });
+
+    rzp.open();
+
+  } catch (error) {
+
+    console.log(error);
+    alert(error.message);
+
+  }
+
+});
