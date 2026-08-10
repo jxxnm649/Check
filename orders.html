@@ -9,14 +9,25 @@
   <!-- CSS Link ನ್ನು orders.css ಗೆ ನವೀಕರಿಸಲಾಗಿದೆ -->
   <link rel="stylesheet" href="orders.css">
 </head>
-<body>
+<body class="bf-has-nav">
 
+  <div class="container">
   <h1>My Orders 📦</h1>
 
   <div id="orders"></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="home.html"><span>🏠</span><p>Home</p></a>
+    <a href="wishlist.html"><span>❤️</span><p>Wishlist</p></a>
+    <a href="orders.html" class="active"><span>📦</span><p>Orders</p></a>
+    <a href="profile.html"><span>👤</span><p>Profile</p></a>
+    <a href="admin.html"><span>☰</span><p>More</p></a>
+  </nav>
 
   <!-- JS Link ನ್ನು orders.js ಗೆ ನವೀಕರಿಸಲಾಗಿದೆ -->
   <script type="module" src="orders.js"></script>
+  <script type="module" src="logout.js"></script>
 
 </body>
 </html>

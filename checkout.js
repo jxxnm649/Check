@@ -30,8 +30,29 @@ onAuthStateChanged(auth, (user) => {
 
   currentUser = user;
   renderSummary();
+  prefillFromProfile(user);
 
 });
+
+// Prefill checkout form with saved profile details (name/mobile/address), still editable
+async function prefillFromProfile(user) {
+  try {
+    const docSnap = await getDoc(doc(db, "users", user.uid));
+    if (!docSnap.exists()) return;
+
+    const data = docSnap.data();
+    const nameField = document.getElementById("customerName");
+    const mobileField = document.getElementById("mobile");
+    const addressField = document.getElementById("address");
+
+    if (nameField && !nameField.value && data.name) nameField.value = data.name;
+    if (mobileField && !mobileField.value && data.mobile) mobileField.value = data.mobile;
+    if (addressField && !addressField.value && data.address) addressField.value = data.address;
+
+  } catch (error) {
+    console.log(error);
+  }
+}
 
 // Fetch the items that will be ordered (Buy Now product OR full cart)
 async function getOrderItems() {
@@ -47,7 +68,7 @@ async function getOrderItems() {
       return { products: [], cartSnapshot: null };
     }
 
-    products.push({ ...productSnap.data(), qty: 1 });
+    products.push({ ...productSnap.data(), id: buyNowProductId, qty: 1 });
 
   } else {
 
@@ -57,7 +78,7 @@ async function getOrderItems() {
 
     cartSnapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      products.push({ ...data, qty: data.qty || 1 });
+      products.push({ ...data, id: docSnap.id, qty: data.qty || 1 });
     });
 
   }

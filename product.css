@@ -1,16 +1,91 @@
-.card{
-    max-width: 500px;
-    margin: 30px auto;
+.pd-wrap{
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-.card img{
-    height: 320px;
+.pd-image-wrap{
+    width: 100%;
+    background: var(--paper-dim, #f2ece0);
 }
 
-.card-content{
+.pd-image{
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto;
+}
+
+.pd-content{
     padding: 20px;
 }
 
+.pd-content h1{
+    font-size: 24px;
+    margin: 0 0 8px;
+}
+
+.pd-category{
+    color: var(--ink-soft);
+    font-size: 14px;
+}
+
+.pd-price-block{
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 8px;
+}
+
 .price{
-    font-size: 22px;
+    font-size: 26px;
+}
+
+.mrp-strike{
+    text-decoration: line-through;
+    color: var(--ink-soft);
+    font-size: 17px;
+}
+
+.saved-text{
+    color: var(--leaf-green, #2F7A4F);
+    font-weight: 600;
+    font-size: 14px;
+    margin-top: 2px;
+}
+
+.pd-description{
+    margin-top: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+}
+
+.pd-actions{
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.pd-actions button{
+    flex: 1;
+    padding: 14px;
+}
+
+.pd-actions .order-btn{
+    background: var(--ink);
+    color: #fff;
+}
+
+@media (min-width: 640px){
+    .pd-wrap{
+        display: flex;
+        max-width: 900px;
+        margin: 24px auto;
+        border-radius: var(--radius, 14px);
+        overflow: hidden;
+        box-shadow: var(--shadow);
+    }
+    .pd-image-wrap{ flex: 1; }
+    .pd-image{ max-height: 480px; }
+    .pd-content{ flex: 1; }
 }

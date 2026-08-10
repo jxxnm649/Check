@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="products.css">
 </head>
-<body>
+<body class="bf-has-nav">
 
 <h1>Bestify Products</h1>
 
@@ -20,11 +20,16 @@
 
 <div id="products"></div>
 
-<script>
-alert("HTML Loaded");
-</script>
+<nav class="bottom-nav">
+  <a href="home.html"><span>🏠</span><p>Home</p></a>
+  <a href="wishlist.html"><span>❤️</span><p>Wishlist</p></a>
+  <a href="orders.html"><span>📦</span><p>Orders</p></a>
+  <a href="profile.html"><span>👤</span><p>Profile</p></a>
+  <a href="admin.html"><span>☰</span><p>More</p></a>
+</nav>
 
 <script type="module" src="products.js"></script>
+<script type="module" src="logout.js"></script>
 
 </body>
 </html>

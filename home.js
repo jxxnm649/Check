@@ -117,6 +117,23 @@ function renderSkeletons(container, count = 4) {
   `).join("");
 }
 
+// ---------- Price / MRP helper ----------
+function priceBlockHTML(p) {
+  const mrp = Number(p.mrp) || 0;
+  const price = Number(p.price) || 0;
+  if (mrp > price) {
+    const saved = mrp - price;
+    return `
+      <div class="price-block">
+        <span class="mrp-strike">₹${mrp}</span>
+        <span class="price">₹${price}</span>
+      </div>
+      <div class="saved-text">You saved ₹${saved}</div>
+    `;
+  }
+  return `<div class="price">₹${price}</div>`;
+}
+
 // ---------- Product card ----------
 function productCardHTML(p) {
   const hasStock = typeof p.stock === "number";
@@ -129,13 +146,18 @@ function productCardHTML(p) {
       <div class="product-info">
         <h3>${p.productName}</h3>
         <p>${p.description}</p>
-        <div class="price">₹${p.price}</div>
+        ${priceBlockHTML(p)}
         ${hasStock ? `<span class="stock-badge ${outOfStock ? "out" : lowStock ? "low" : "in"}">
           ${outOfStock ? "Out of Stock" : lowStock ? `Only ${p.stock} left` : "In Stock"}
         </span>` : ""}
-        <button class="buy-btn" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>
-          ${outOfStock ? "Out of Stock" : "Add to Cart"}
-        </button>
+        <div class="product-card-actions">
+          <button class="buy-btn" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>
+            ${outOfStock ? "Out of Stock" : "Add to Cart"}
+          </button>
+          <button class="order-btn" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>
+            Order
+          </button>
+        </div>
       </div>
     </div>
   `;
@@ -176,10 +198,17 @@ async function handleAddToCart(id) {
 function attachCardEvents(container) {
   container.addEventListener("click", (e) => {
 
-    const btn = e.target.closest(".buy-btn");
-    if (btn) {
+    const buyBtn = e.target.closest(".buy-btn");
+    if (buyBtn) {
       e.stopPropagation();
-      handleAddToCart(btn.dataset.id);
+      handleAddToCart(buyBtn.dataset.id);
+      return;
+    }
+
+    const orderBtn = e.target.closest(".order-btn");
+    if (orderBtn) {
+      e.stopPropagation();
+      window.location.href = `checkout.html?productId=${orderBtn.dataset.id}`;
       return;
     }
 
@@ -221,9 +250,19 @@ function applyFilters() {
 
   const filtered = allProducts.filter(p => {
     const matchesCategory = activeCategory === "All" || p.category === activeCategory;
-    const matchesSearch = !term || p.productName.toLowerCase().includes(term);
+    const matchesSearch = !term
+      || (p.productName || "").toLowerCase().includes(term)
+      || (p.description || "").toLowerCase().includes(term)
+      || (p.category || "").toLowerCase().includes(term);
     return matchesCategory && matchesSearch;
   });
+
+  // Hide Best Sellers while actively searching, to avoid confusing "search not working"
+  if (featuredTitle && featuredContainer) {
+    const show = !term && featured_cache.length > 0;
+    featuredTitle.style.display = show ? "block" : "none";
+    featuredContainer.style.display = show ? "grid" : "none";
+  }
 
   if (filtered.length === 0) {
     productContainer.innerHTML = `<p class="no-results">No products found 😔</p>`;
@@ -232,6 +271,8 @@ function applyFilters() {
 
   productContainer.innerHTML = filtered.map(productCardHTML).join("");
 }
+
+let featured_cache = [];
 
 // ---------- Load Products ----------
 async function loadProducts() {
@@ -254,10 +295,10 @@ async function loadProducts() {
     renderCategories(allProducts);
 
     // Featured / Best Sellers: top 4 products
-    const featured = allProducts.slice(0, 4);
-    if (featured.length > 0) {
+    featured_cache = allProducts.slice(0, 4);
+    if (featured_cache.length > 0) {
       featuredTitle.style.display = "block";
-      featuredContainer.innerHTML = featured.map(productCardHTML).join("");
+      featuredContainer.innerHTML = featured_cache.map(productCardHTML).join("");
     }
 
     applyFilters();

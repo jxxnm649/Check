@@ -87,7 +87,7 @@ function renderOrderCard(id, order) {
   if (Array.isArray(order.products)) {
     order.products.forEach((product) => {
       productsHTML += `
-        <div class="product-item">
+        <div class="product-item" ${product.id ? `data-product-id="${product.id}" style="cursor:pointer;"` : ""}>
           <img src="${product.image}" alt="${product.productName}">
           <div class="product-details">
             <h3>${product.productName}${product.qty > 1 ? ` × ${product.qty}` : ""}</h3>
@@ -174,7 +174,14 @@ async function loadOrders(user) {
 ordersDiv.addEventListener("click", async (e) => {
 
   const cancelBtn = e.target.closest(".cancel-btn");
-  if (!cancelBtn) return;
+
+  if (!cancelBtn) {
+    const productItem = e.target.closest(".product-item");
+    if (productItem && productItem.dataset.productId) {
+      window.location.href = `product.html?id=${productItem.dataset.productId}`;
+    }
+    return;
+  }
 
   const id = cancelBtn.dataset.id;
 

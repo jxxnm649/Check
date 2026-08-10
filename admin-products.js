@@ -103,6 +103,7 @@ form.addEventListener("submit", async (e) => {
         image: imageUrl,
         productName: document.getElementById("productName").value,
         category: document.getElementById("category").value,
+        mrp: document.getElementById("mrp").value ? Number(document.getElementById("mrp").value) : 0,
         price: document.getElementById("price").value,
         stock: Number(document.getElementById("stock").value),
         description: document.getElementById("description").value
@@ -173,7 +174,11 @@ async function loadProducts() {
 
                 <p>${product.category}</p>
 
-                <p class="price">₹${product.price}</p>
+                <p class="price">${
+                    Number(product.mrp) > Number(product.price)
+                    ? `<span style="text-decoration:line-through;color:#888;">₹${product.mrp}</span> ₹${product.price} <span style="color:#2F7A4F;font-size:12px;">(Saved ₹${Number(product.mrp) - Number(product.price)})</span>`
+                    : `₹${product.price}`
+                }</p>
 
                 <p class="stock-badge ${
                     (product.stock ?? 0) === 0 ? "out" :
@@ -241,6 +246,7 @@ window.editProduct = async function(id) {
 
         document.getElementById("productName").value = product.productName;
         document.getElementById("category").value = product.category;
+        document.getElementById("mrp").value = product.mrp || "";
         document.getElementById("price").value = product.price;
         document.getElementById("stock").value = product.stock ?? 0;
         document.getElementById("description").value = product.description;

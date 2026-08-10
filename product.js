@@ -40,32 +40,46 @@ async function loadProduct() {
     const outOfStock = hasStock && product.stock === 0;
     const lowStock = hasStock && product.stock > 0 && product.stock <= 5;
 
+    const mrp = Number(product.mrp) || 0;
+    const price = Number(product.price) || 0;
+    const priceHTML = mrp > price
+      ? `<div class="pd-price-block">
+           <span class="mrp-strike">₹${mrp}</span>
+           <span class="price">₹${price}</span>
+         </div>
+         <div class="saved-text">You saved ₹${mrp - price}</div>`
+      : `<div class="price">₹${price}</div>`;
+
     productDiv.innerHTML = `
-<div class="card">
+<div class="pd-wrap">
 
-  <img src="${product.image}" alt="${product.productName}">
+  <div class="pd-image-wrap">
+    <img class="pd-image" src="${product.image}" alt="${product.productName}">
+  </div>
 
-  <div class="card-content">
+  <div class="pd-content">
 
     <h1>${product.productName}</h1>
 
-    <p><b>Category:</b> ${product.category}</p>
+    <p class="pd-category"><b>Category:</b> ${product.category}</p>
 
-    <p class="price">₹${product.price}</p>
+    ${priceHTML}
 
     ${hasStock ? `<span class="stock-badge ${outOfStock ? "out" : lowStock ? "low" : "in"}">
       ${outOfStock ? "Out of Stock" : lowStock ? `Only ${product.stock} left` : "In Stock"}
     </span>` : ""}
 
-    <p>${product.description}</p>
+    <p class="pd-description">${product.description}</p>
 
-    <button onclick="addToCart()" ${outOfStock ? "disabled" : ""}>
-      ${outOfStock ? "Out of Stock" : "Add To Cart"}
-    </button>
+    <div class="pd-actions">
+      <button onclick="addToCart()" ${outOfStock ? "disabled" : ""}>
+        ${outOfStock ? "Out of Stock" : "Add To Cart"}
+      </button>
 
-    <button onclick="buyNow()" ${outOfStock ? "disabled" : ""}>
-      Buy Now
-    </button>
+      <button class="order-btn" onclick="buyNow()" ${outOfStock ? "disabled" : ""}>
+        Buy Now
+      </button>
+    </div>
 
   </div>
 
