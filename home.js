@@ -122,16 +122,16 @@ function priceBlockHTML(p) {
   const mrp = Number(p.mrp) || 0;
   const price = Number(p.price) || 0;
   if (mrp > price) {
-    const saved = mrp - price;
+    const pct = Math.round(((mrp - price) / mrp) * 100);
     return `
       <div class="price-block">
-        <span class="mrp-strike">₹${mrp}</span>
         <span class="price">₹${price}</span>
+        <span class="mrp-strike">₹${mrp}</span>
+        <span class="off-badge">${pct}% off</span>
       </div>
-      <div class="saved-text">You saved ₹${saved}</div>
     `;
   }
-  return `<div class="price">₹${price}</div>`;
+  return `<div class="price-block"><span class="price">₹${price}</span></div>`;
 }
 
 // ---------- Product card ----------

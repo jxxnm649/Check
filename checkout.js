@@ -45,9 +45,11 @@ async function prefillFromProfile(user) {
     const mobileField = document.getElementById("mobile");
     const addressField = document.getElementById("address");
 
-    if (nameField && !nameField.value && data.name) nameField.value = data.name;
-    if (mobileField && !mobileField.value && data.mobile) mobileField.value = data.mobile;
-    if (addressField && !addressField.value && data.address) addressField.value = data.address;
+    const isValidText = (v) => typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "true" && v.trim().toLowerCase() !== "false";
+
+    if (nameField && !nameField.value && isValidText(data.name)) nameField.value = data.name;
+    if (mobileField && !mobileField.value && isValidText(data.mobile)) mobileField.value = data.mobile;
+    if (addressField && !addressField.value && isValidText(data.address)) addressField.value = data.address;
 
   } catch (error) {
     console.log(error);

@@ -48,6 +48,7 @@
 }
 
 .saved-text{
+    display: block;
     color: var(--leaf-green, #2F7A4F);
     font-weight: 600;
     font-size: 14px;

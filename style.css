@@ -84,3 +84,44 @@ h1{
     border-color: var(--marigold-deep);
     background: var(--paper-dim);
 }
+
+/* ---------- Checkout form polish ---------- */
+.checkout-container{
+    max-width: 480px;
+    margin: 0 auto;
+}
+
+.checkout-form{
+    background: var(--card, #fff);
+    border: 1px solid var(--line, #eee);
+    border-radius: var(--radius, 14px);
+    padding: 18px;
+    margin-top: 14px;
+}
+
+.checkout-form label{
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft, #555);
+    margin: 14px 0 6px;
+}
+
+.checkout-form label:first-of-type{
+    margin-top: 0;
+}
+
+.checkout-form input,
+.checkout-form textarea{
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.payment-label{
+    margin-top: 18px !important;
+}
+
+.profile-container{
+    max-width: 480px;
+    margin: 0 auto;
+}
