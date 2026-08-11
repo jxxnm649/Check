@@ -43,12 +43,12 @@ async function loadProduct() {
     const mrp = Number(product.mrp) || 0;
     const price = Number(product.price) || 0;
     const priceHTML = mrp > price
-      ? `<div class="pd-price-block">
-           <span class="mrp-strike">₹${mrp}</span>
+      ? `<div class="pd-price-row">
            <span class="price">₹${price}</span>
-         </div>
-         <div class="saved-text">You saved ₹${mrp - price}</div>`
-      : `<div class="price">₹${price}</div>`;
+           <span class="mrp-strike">₹${mrp}</span>
+           <span class="off-badge">${Math.round(((mrp - price) / mrp) * 100)}% off</span>
+         </div>`
+      : `<div class="pd-price-row"><span class="price">₹${price}</span></div>`;
 
     productDiv.innerHTML = `
 <div class="pd-wrap">
@@ -61,7 +61,7 @@ async function loadProduct() {
 
     <h1>${product.productName}</h1>
 
-    <p class="pd-category"><b>Category:</b> ${product.category}</p>
+    <p class="pd-category">${product.category}</p>
 
     ${priceHTML}
 
@@ -71,18 +71,18 @@ async function loadProduct() {
 
     <p class="pd-description">${product.description}</p>
 
-    <div class="pd-actions">
-      <button onclick="addToCart()" ${outOfStock ? "disabled" : ""}>
-        ${outOfStock ? "Out of Stock" : "Add To Cart"}
-      </button>
-
-      <button class="order-btn" onclick="buyNow()" ${outOfStock ? "disabled" : ""}>
-        Buy Now
-      </button>
-    </div>
-
   </div>
 
+</div>
+
+<div class="pd-sticky-actions">
+  <button class="pd-add-btn" onclick="addToCart()" ${outOfStock ? "disabled" : ""}>
+    ${outOfStock ? "Out of Stock" : "Add To Cart"}
+  </button>
+
+  <button class="pd-buy-btn" onclick="buyNow()" ${outOfStock ? "disabled" : ""}>
+    Buy Now
+  </button>
 </div>
 `;
 
