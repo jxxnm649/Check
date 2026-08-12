@@ -8,7 +8,6 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc,
   collection,
   getDocs,
   query,
@@ -23,24 +22,34 @@ const productId = params.get("id");
 
 let currentUser = null;
 let currentQty = 1;
-let currentProduct = null;
-let isWishlisted = false;
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
-  checkWishlistStatus();
+  updateCartBadge();
 });
 
 loadProduct();
 
-async function checkWishlistStatus() {
-  if (!currentUser || !productId) return;
+async function updateCartBadge() {
+  const badge = document.getElementById("pdCartBadge");
+  if (!badge || !currentUser) return;
   try {
-    const wSnap = await getDoc(doc(db, "users", currentUser.uid, "wishlist", productId));
-    isWishlisted = wSnap.exists();
-    const heartBtn = document.getElementById("wishlistHeart");
-    if (heartBtn) heartBtn.classList.toggle("active", isWishlisted);
+    const snap = await getDocs(collection(db, "users", currentUser.uid, "cart"));
+    const count = snap.docs.reduce((sum, d) => sum + (d.data().qty || 1), 0);
+    if (count > 0) {
+      badge.textContent = count;
+      badge.style.display = "flex";
+    } else {
+      badge.style.display = "none";
+    }
   } catch (e) { /* ignore */ }
+}
+
+function deliveryEstimateText() {
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  const options = { weekday: "short", day: "numeric", month: "short" };
+  return d.toLocaleDateString("en-IN", options);
 }
 
 async function loadProduct() {
@@ -56,7 +65,6 @@ async function loadProduct() {
     }
 
     const product = productSnap.data();
-    currentProduct = product;
 
     const hasStock = typeof product.stock === "number";
     const outOfStock = hasStock && product.stock === 0;
@@ -81,7 +89,6 @@ async function loadProduct() {
   <div class="pd-gallery">
     <div class="pd-image-wrap">
       ${hasDiscount ? `<span class="pd-discount-badge">${pct}% OFF</span>` : ""}
-      <button id="wishlistHeart" class="pd-heart-btn" aria-label="Wishlist">♡</button>
       <img class="pd-image" src="${product.image}" alt="${product.productName}">
     </div>
   </div>
@@ -100,6 +107,7 @@ async function loadProduct() {
              ${outOfStock ? "Out of Stock" : lowStock ? `Only ${product.stock} left` : "In Stock"}
            </span>`
         : `<span class="stock-badge in">In Stock</span>`}
+      ${!outOfStock ? `<p class="pd-delivery-note">🚚 Free delivery by <b>${deliveryEstimateText()}</b></p>` : ""}
     </div>
 
     <hr class="pd-divider">
@@ -150,9 +158,7 @@ async function loadProduct() {
     });
     document.getElementById("addToCartBtn").addEventListener("click", addToCart);
     document.getElementById("buyNowBtn").addEventListener("click", buyNow);
-    document.getElementById("wishlistHeart").addEventListener("click", toggleWishlist);
 
-    checkWishlistStatus();
     loadRelatedProducts(product.category);
 
   } catch (error) {
@@ -216,32 +222,6 @@ async function loadRelatedProducts(category) {
   }
 }
 
-async function toggleWishlist() {
-
-  if (!currentUser) {
-    alert("Please Login First");
-    window.location.href = "login.html";
-    return;
-  }
-
-  const heartBtn = document.getElementById("wishlistHeart");
-
-  try {
-    if (isWishlisted) {
-      await deleteDoc(doc(db, "users", currentUser.uid, "wishlist", productId));
-      isWishlisted = false;
-    } else {
-      await setDoc(doc(db, "users", currentUser.uid, "wishlist", productId), currentProduct);
-      isWishlisted = true;
-    }
-    heartBtn.classList.toggle("active", isWishlisted);
-  } catch (error) {
-    alert(error.message);
-    console.log(error);
-  }
-
-}
-
 async function addToCart() {
 
   if (!currentUser) {
@@ -266,6 +246,7 @@ async function addToCart() {
 
     await setDoc(cartRef, { ...productSnap.data(), qty: existingQty + currentQty });
 
+    updateCartBadge();
     alert("Added To Cart ✅");
 
   } catch (error) {

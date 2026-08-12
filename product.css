@@ -1,3 +1,60 @@
+.pd-header{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line, #eee);
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 15;
+}
+
+.pd-header-back{
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 20px;
+}
+
+.pd-header-logo{
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--ink);
+    flex: 1;
+}
+
+.pd-header-icons{
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 20px;
+}
+
+.pd-header-icons a{
+    color: var(--ink);
+    text-decoration: none;
+    position: relative;
+}
+
+.pd-cart-icon{ display: inline-flex; }
+
+.pd-cart-badge{
+    position: absolute;
+    top: -6px;
+    right: -10px;
+    background: var(--rust, #C1442D);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 999px;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
+}
+
 .pd-wrap{
     max-width: 600px;
     margin: 0 auto;
@@ -32,25 +89,7 @@
 }
 
 .pd-heart-btn{
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: #fff;
-    border: none;
-    font-size: 20px;
-    color: var(--ink);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-.pd-heart-btn.active{
-    color: var(--rust, #C1442D);
+    display: none;
 }
 
 .pd-content{
@@ -90,7 +129,7 @@
 }
 
 .off-badge{
-    color: var(--leaf-green, #2F7A4F);
+    color: var(--rust, #C1442D);
     font-weight: 700;
     font-size: 14px;
 }
@@ -103,6 +142,16 @@
 
 .pd-stock-row{
     margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.pd-delivery-note{
+    font-size: 13px;
+    color: var(--leaf-green, #2F7A4F);
+    margin: 0;
 }
 
 .pd-divider{
@@ -271,9 +320,9 @@
 }
 
 .pd-buy-btn{
-    background: var(--marigold-deep, #D98925);
+    background: var(--rust, #C1442D);
     color: #fff;
-    border: 2px solid var(--marigold-deep, #D98925);
+    border: 2px solid var(--rust, #C1442D);
 }
 
 @media (min-width: 640px){
