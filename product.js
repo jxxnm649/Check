@@ -88,6 +88,12 @@ async function loadProduct() {
     productDiv.innerHTML = `
 <div class="pd-wrap">
 
+  <p class="pd-breadcrumb">
+    <a href="home.html">Home</a> &gt;
+    <span>${product.category}</span> &gt;
+    <span class="pd-breadcrumb-current">${product.productName}</span>
+  </p>
+
   <div class="pd-gallery">
     <div class="pd-image-wrap">
       ${hasDiscount ? `<span class="pd-discount-badge">${pct}% OFF</span>` : ""}
@@ -130,10 +136,6 @@ async function loadProduct() {
 
     <hr class="pd-divider">
 
-    <p class="pd-description">${product.description}</p>
-
-    <hr class="pd-divider">
-
     <div class="pd-qty-row">
       <p class="pd-qty-label">Quantity</p>
       <div class="pd-qty-stepper">
@@ -143,26 +145,30 @@ async function loadProduct() {
       </div>
     </div>
 
+    <div class="pd-actions">
+      <button class="pd-buy-btn" id="buyNowBtn" ${outOfStock ? "disabled" : ""}>
+        Buy Now
+      </button>
+      <button class="pd-add-btn" id="addToCartBtn" ${outOfStock ? "disabled" : ""}>
+        ${outOfStock ? "Out of Stock" : "Add to Cart"}
+      </button>
+    </div>
+
     <div class="pd-trust-row">
       <div class="pd-trust-item"><span>🛡️</span><p>1 Year Warranty</p></div>
       <div class="pd-trust-item"><span>↩️</span><p>7-Day Returns</p></div>
       <div class="pd-trust-item"><span>🚚</span><p>Fast Delivery</p></div>
     </div>
 
+    <hr class="pd-divider">
+
+    <p class="pd-description">${product.description}</p>
+
   </div>
 
 </div>
 
 <div id="relatedSection"></div>
-
-<div class="pd-sticky-actions">
-  <button class="pd-buy-btn" id="buyNowBtn" ${outOfStock ? "disabled" : ""}>
-    Buy Now
-  </button>
-  <button class="pd-add-btn" id="addToCartBtn" ${outOfStock ? "disabled" : ""}>
-    ${outOfStock ? "Out of Stock" : "Add to Cart"}
-  </button>
-</div>
 `;
 
     document.getElementById("qtyMinus").addEventListener("click", () => {
