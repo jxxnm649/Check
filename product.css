@@ -1,10 +1,10 @@
 .pd-wrap{
     max-width: 600px;
     margin: 0 auto;
-    padding-bottom: 90px;
 }
 
 .pd-image-wrap{
+    position: relative;
     width: 100%;
     aspect-ratio: 1 / 1;
     background: var(--paper-dim, #f2ece0);
@@ -18,20 +18,57 @@
     display: block;
 }
 
-.pd-content{
-    padding: 16px 20px;
+.pd-discount-badge{
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: var(--rust, #C1442D);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    z-index: 2;
 }
 
-.pd-content h1{
+.pd-heart-btn{
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
     font-size: 20px;
-    margin: 0 0 4px;
-    line-height: 1.3;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.pd-heart-btn.active{
+    color: var(--rust, #C1442D);
+}
+
+.pd-content{
+    padding: 16px 20px 100px;
 }
 
 .pd-category{
     color: var(--ink-soft);
-    font-size: 13px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin: 0 0 4px;
+}
+
+.pd-content h1{
+    font-size: 21px;
     margin: 0 0 10px;
+    line-height: 1.3;
 }
 
 .pd-price-row{
@@ -39,12 +76,11 @@
     align-items: baseline;
     gap: 10px;
     flex-wrap: wrap;
-    margin-bottom: 8px;
 }
 
 .pd-price-row .price{
-    font-size: 26px;
-    font-weight: 700;
+    font-size: 27px;
+    font-weight: 800;
 }
 
 .mrp-strike{
@@ -56,15 +92,154 @@
 .off-badge{
     color: var(--leaf-green, #2F7A4F);
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
+}
+
+.pd-tax-note{
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 2px 0 0;
+}
+
+.pd-stock-row{
+    margin-top: 12px;
+}
+
+.pd-divider{
+    border: none;
+    border-top: 1px solid var(--line, #eee);
+    margin: 16px 0;
 }
 
 .pd-description{
-    margin-top: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: var(--ink-soft);
+    font-size: 14px;
 }
 
+.pd-qty-row{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pd-qty-label{
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0;
+}
+
+.pd-qty-stepper{
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--line, #ddd);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.pd-qty-stepper button{
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #fff;
+    font-size: 18px;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.pd-qty-stepper span{
+    width: 32px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.pd-trust-row{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.pd-trust-item{
+    border: 1px solid var(--line, #eee);
+    border-radius: 12px;
+    padding: 12px 6px;
+    text-align: center;
+}
+
+.pd-trust-item span{ font-size: 18px; display: block; margin-bottom: 4px; }
+.pd-trust-item p{ font-size: 11px; color: var(--ink-soft); margin: 0; line-height: 1.3; }
+
+/* ---------- Related products ---------- */
+.pd-related{
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 8px 20px 30px;
+    border-top: 1px solid var(--line, #eee);
+}
+
+.pd-related-title{
+    font-size: 16px;
+    margin: 18px 0 12px;
+}
+
+.pd-related-grid{
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.pd-related-card{
+    text-decoration: none;
+    color: var(--ink);
+    border: 1px solid var(--line, #eee);
+    border-radius: 12px;
+    overflow: hidden;
+    display: block;
+}
+
+.pd-related-img{
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--paper-dim, #f2ece0);
+}
+
+.pd-related-img img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.pd-related-name{
+    font-size: 12px;
+    margin: 8px 8px 4px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+}
+
+.pd-related-price{
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 8px 8px;
+}
+
+.pd-related-mrp{
+    text-decoration: line-through;
+    color: var(--ink-soft);
+    font-weight: 400;
+    font-size: 11px;
+    margin-left: 6px;
+}
+
+/* ---------- Sticky bottom actions ---------- */
 .pd-sticky-actions{
     position: fixed;
     left: 0;
@@ -85,7 +260,8 @@
     flex: 1;
     padding: 13px;
     font-weight: 700;
-    border-radius: 10px;
+    border-radius: 999px;
+    font-size: 14px;
 }
 
 .pd-add-btn{
@@ -95,28 +271,27 @@
 }
 
 .pd-buy-btn{
-    background: var(--ink);
+    background: var(--marigold-deep, #D98925);
     color: #fff;
-    border: 2px solid var(--ink);
+    border: 2px solid var(--marigold-deep, #D98925);
 }
 
 @media (min-width: 640px){
     .pd-wrap{
         display: flex;
         max-width: 900px;
-        margin: 24px auto;
-        border-radius: var(--radius, 14px);
-        overflow: hidden;
-        box-shadow: var(--shadow);
-        padding-bottom: 0;
+        margin: 24px auto 0;
     }
-    .pd-image-wrap{ flex: 1; aspect-ratio: auto; height: 480px; }
-    .pd-content{ flex: 1; }
+    .pd-image-wrap{ aspect-ratio: auto; height: 520px; }
+    .pd-gallery{ flex: 1; }
+    .pd-content{ flex: 1; padding-bottom: 20px; }
+    .pd-related{ max-width: 900px; }
     .pd-sticky-actions{
         position: static;
         box-shadow: none;
         border-top: none;
-        padding: 0 20px 20px;
-        max-width: 900px;
+        max-width: 340px;
+        margin: 0 0 20px 20px;
+        padding: 0;
     }
 }

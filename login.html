@@ -9,23 +9,33 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="auth-page">
 
-<form id="loginForm">
+    <div class="auth-wrap">
 
-    <h1>Bestify Login</h1>
+        <div class="auth-hero">
+            <div class="auth-logo">🛍️</div>
+            <h1>Welcome Back</h1>
+            <p>Login to your Bestify Store account</p>
+        </div>
 
-    <input type="email" id="email" placeholder="Email" required>
+        <form id="loginForm" class="auth-form">
 
-    <input type="password" id="password" placeholder="Password" required>
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="you@example.com" required>
 
-    <button type="submit">Login</button>
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Your password" required>
 
-</form>
+            <button type="submit">Login</button>
 
-<p style="text-align:center; margin-top:14px; font-size:14px;">
-  New here? <a href="index.html" style="color:var(--marigold-deep,#D98925); font-weight:600;">Create an account</a>
-</p>
+        </form>
+
+        <p class="auth-switch">
+          New here? <a href="index.html">Create an account</a>
+        </p>
+
+    </div>
 
 <script type="module" src="firebase.js"></script>
 <script type="module" src="login.js"></script>

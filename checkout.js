@@ -20,6 +20,7 @@ let currentUser = null;
 
 const params = new URLSearchParams(window.location.search);
 const buyNowProductId = params.get("productId");
+const buyNowQty = Number(params.get("qty")) || 1;
 
 onAuthStateChanged(auth, (user) => {
 
@@ -70,7 +71,7 @@ async function getOrderItems() {
       return { products: [], cartSnapshot: null };
     }
 
-    products.push({ ...productSnap.data(), id: buyNowProductId, qty: 1 });
+    products.push({ ...productSnap.data(), id: buyNowProductId, qty: buyNowQty });
 
   } else {
 
