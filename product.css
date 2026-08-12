@@ -154,6 +154,38 @@
     margin: 0;
 }
 
+.pd-variant-row{
+    margin-top: 16px;
+}
+
+.pd-variant-label{
+    font-weight: 600;
+    font-size: 13px;
+    margin: 0 0 8px;
+}
+
+.pd-variant-options{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pd-variant-chip{
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line, #ddd);
+    background: #fff;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.pd-variant-chip.selected{
+    border-color: var(--ink);
+    background: var(--ink);
+    color: #fff;
+}
+
 .pd-divider{
     border: none;
     border-top: 1px solid var(--line, #eee);

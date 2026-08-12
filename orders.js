@@ -91,6 +91,7 @@ function renderOrderCard(id, order) {
           <img src="${product.image}" alt="${product.productName}">
           <div class="product-details">
             <h3>${product.productName}${product.qty > 1 ? ` × ${product.qty}` : ""}</h3>
+            ${(product.selectedSize || product.selectedColour) ? `<p style="font-size:12px;color:var(--ink-soft);margin:0 0 4px;">${[product.selectedSize, product.selectedColour].filter(Boolean).join(", ")}</p>` : ""}
             <p class="price">₹${product.price}</p>
           </div>
         </div>

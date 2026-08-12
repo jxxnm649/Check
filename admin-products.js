@@ -106,7 +106,13 @@ form.addEventListener("submit", async (e) => {
         mrp: document.getElementById("mrp").value ? Number(document.getElementById("mrp").value) : 0,
         price: document.getElementById("price").value,
         stock: Number(document.getElementById("stock").value),
-        description: document.getElementById("description").value
+        description: document.getElementById("description").value,
+        sizes: document.getElementById("sizes").value
+          ? document.getElementById("sizes").value.split(",").map(s => s.trim()).filter(Boolean)
+          : [],
+        colours: document.getElementById("colours").value
+          ? document.getElementById("colours").value.split(",").map(s => s.trim()).filter(Boolean)
+          : []
 
     };
 
@@ -250,6 +256,8 @@ window.editProduct = async function(id) {
         document.getElementById("price").value = product.price;
         document.getElementById("stock").value = product.stock ?? 0;
         document.getElementById("description").value = product.description;
+        document.getElementById("sizes").value = (product.sizes || []).join(", ");
+        document.getElementById("colours").value = (product.colours || []).join(", ");
 
         editMode = true;
         editProductId = id;

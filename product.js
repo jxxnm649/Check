@@ -22,6 +22,8 @@ const productId = params.get("id");
 
 let currentUser = null;
 let currentQty = 1;
+let selectedSize = null;
+let selectedColour = null;
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
@@ -110,6 +112,22 @@ async function loadProduct() {
       ${!outOfStock ? `<p class="pd-delivery-note">🚚 Free delivery by <b>${deliveryEstimateText()}</b></p>` : ""}
     </div>
 
+    ${(product.sizes && product.sizes.length) ? `
+    <div class="pd-variant-row">
+      <p class="pd-variant-label">Size</p>
+      <div class="pd-variant-options" id="sizeOptions">
+        ${product.sizes.map((s, i) => `<button type="button" class="pd-variant-chip${i === 0 ? " selected" : ""}" data-size="${s}">${s}</button>`).join("")}
+      </div>
+    </div>` : ""}
+
+    ${(product.colours && product.colours.length) ? `
+    <div class="pd-variant-row">
+      <p class="pd-variant-label">Colour</p>
+      <div class="pd-variant-options" id="colourOptions">
+        ${product.colours.map((c, i) => `<button type="button" class="pd-variant-chip${i === 0 ? " selected" : ""}" data-colour="${c}">${c}</button>`).join("")}
+      </div>
+    </div>` : ""}
+
     <hr class="pd-divider">
 
     <p class="pd-description">${product.description}</p>
@@ -158,6 +176,28 @@ async function loadProduct() {
     });
     document.getElementById("addToCartBtn").addEventListener("click", addToCart);
     document.getElementById("buyNowBtn").addEventListener("click", buyNow);
+
+    if (product.sizes && product.sizes.length) {
+      selectedSize = product.sizes[0];
+      document.getElementById("sizeOptions").addEventListener("click", (e) => {
+        const btn = e.target.closest(".pd-variant-chip");
+        if (!btn) return;
+        selectedSize = btn.dataset.size;
+        document.querySelectorAll("#sizeOptions .pd-variant-chip").forEach(c => c.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+    }
+
+    if (product.colours && product.colours.length) {
+      selectedColour = product.colours[0];
+      document.getElementById("colourOptions").addEventListener("click", (e) => {
+        const btn = e.target.closest(".pd-variant-chip");
+        if (!btn) return;
+        selectedColour = btn.dataset.colour;
+        document.querySelectorAll("#colourOptions .pd-variant-chip").forEach(c => c.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+    }
 
     loadRelatedProducts(product.category);
 
@@ -244,7 +284,12 @@ async function addToCart() {
     const cartSnap = await getDoc(cartRef);
     const existingQty = cartSnap.exists() ? (cartSnap.data().qty || 1) : 0;
 
-    await setDoc(cartRef, { ...productSnap.data(), qty: existingQty + currentQty });
+    await setDoc(cartRef, {
+      ...productSnap.data(),
+      qty: existingQty + currentQty,
+      ...(selectedSize ? { selectedSize } : {}),
+      ...(selectedColour ? { selectedColour } : {})
+    });
 
     updateCartBadge();
     alert("Added To Cart ✅");
@@ -259,5 +304,8 @@ async function addToCart() {
 }
 
 function buyNow() {
-  window.location.href = `checkout.html?productId=${productId}&qty=${currentQty}`;
+  let url = `checkout.html?productId=${productId}&qty=${currentQty}`;
+  if (selectedSize) url += `&size=${encodeURIComponent(selectedSize)}`;
+  if (selectedColour) url += `&colour=${encodeURIComponent(selectedColour)}`;
+  window.location.href = url;
 }

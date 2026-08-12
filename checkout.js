@@ -21,6 +21,8 @@ let currentUser = null;
 const params = new URLSearchParams(window.location.search);
 const buyNowProductId = params.get("productId");
 const buyNowQty = Number(params.get("qty")) || 1;
+const buyNowSize = params.get("size");
+const buyNowColour = params.get("colour");
 
 onAuthStateChanged(auth, (user) => {
 
@@ -71,7 +73,13 @@ async function getOrderItems() {
       return { products: [], cartSnapshot: null };
     }
 
-    products.push({ ...productSnap.data(), id: buyNowProductId, qty: buyNowQty });
+    products.push({
+      ...productSnap.data(),
+      id: buyNowProductId,
+      qty: buyNowQty,
+      ...(buyNowSize ? { selectedSize: buyNowSize } : {}),
+      ...(buyNowColour ? { selectedColour: buyNowColour } : {})
+    });
 
   } else {
 
@@ -112,7 +120,7 @@ async function renderSummary() {
   summaryEl.innerHTML = `
     ${products.map(p => `
       <div class="summary-row">
-        <span>${p.productName} ${p.qty > 1 ? `× ${p.qty}` : ""}</span>
+        <span>${p.productName} ${p.qty > 1 ? `× ${p.qty}` : ""}${(p.selectedSize || p.selectedColour) ? ` <small style="color:var(--ink-soft);">(${[p.selectedSize, p.selectedColour].filter(Boolean).join(", ")})</small>` : ""}</span>
         <span>₹${Number(p.price) * Number(p.qty || 1)}</span>
       </div>
     `).join("")}
