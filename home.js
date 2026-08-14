@@ -121,17 +121,26 @@ function renderSkeletons(container, count = 4) {
 function priceBlockHTML(p) {
   const mrp = Number(p.mrp) || 0;
   const price = Number(p.price) || 0;
+  const saved = mrp > price ? mrp - price : 0;
+
   if (mrp > price) {
-    const pct = Math.round(((mrp - price) / mrp) * 100);
     return `
-      <div class="price-block">
-        <span class="price">₹${price}</span>
-        <span class="mrp-strike">₹${mrp}</span>
-        <span class="off-badge">${pct}% off</span>
+      <div class="price-section">
+        <div class="price-row">
+          <span class="mrp-strike">₹${mrp.toLocaleString('en-IN')}.00</span>
+          <span class="price">₹${price.toLocaleString('en-IN')}.00</span>
+        </div>
+        <div class="saved-text">You saved ₹${saved.toLocaleString('en-IN')}</div>
       </div>
     `;
   }
-  return `<div class="price-block"><span class="price">₹${price}</span></div>`;
+  return `
+    <div class="price-section">
+      <div class="price-row">
+        <span class="price">₹${price.toLocaleString('en-IN')}.00</span>
+      </div>
+    </div>
+  `;
 }
 
 // ---------- Product card ----------
@@ -139,17 +148,24 @@ function productCardHTML(p) {
   const hasStock = typeof p.stock === "number";
   const outOfStock = hasStock && p.stock === 0;
   const lowStock = hasStock && p.stock > 0 && p.stock <= 5;
+  const desc = p.description || "";
 
   return `
     <div class="product-card" data-id="${p.id}">
       <img src="${p.image}" alt="${p.productName}">
       <div class="product-info">
         <h3>${p.productName}</h3>
-        <p>${p.description}</p>
         ${priceBlockHTML(p)}
+        
+        ${desc ? `
+          <p class="product-description truncated">${desc}</p>
+          <button class="view-more-btn">View More</button>
+        ` : ""}
+
         ${hasStock ? `<span class="stock-badge ${outOfStock ? "out" : lowStock ? "low" : "in"}">
           ${outOfStock ? "Out of Stock" : lowStock ? `Only ${p.stock} left` : "In Stock"}
         </span>` : ""}
+        
         <div class="product-card-actions">
           <button class="buy-btn" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>
             ${outOfStock ? "Out of Stock" : "Add to Cart"}
@@ -197,6 +213,18 @@ async function handleAddToCart(id) {
 
 function attachCardEvents(container) {
   container.addEventListener("click", (e) => {
+
+    // View More Button Toggle
+    const viewMoreBtn = e.target.closest(".view-more-btn");
+    if (viewMoreBtn) {
+      e.stopPropagation();
+      const desc = viewMoreBtn.previousElementSibling;
+      if (desc && desc.classList.contains("product-description")) {
+        desc.classList.toggle("truncated");
+        viewMoreBtn.innerText = desc.classList.contains("truncated") ? "View More" : "View Less";
+      }
+      return;
+    }
 
     const buyBtn = e.target.closest(".buy-btn");
     if (buyBtn) {
@@ -257,7 +285,7 @@ function applyFilters() {
     return matchesCategory && matchesSearch;
   });
 
-  // Hide Best Sellers while actively searching, to avoid confusing "search not working"
+  // Hide Best Sellers while actively searching
   if (featuredTitle && featuredContainer) {
     const show = !term && featured_cache.length > 0;
     featuredTitle.style.display = show ? "block" : "none";
