@@ -117,63 +117,44 @@ function renderSkeletons(container, count = 4) {
   `).join("");
 }
 
-// ---------- Price / MRP helper ----------
-function priceBlockHTML(p) {
-  const mrp = Number(p.mrp) || 0;
-  const price = Number(p.price) || 0;
-  const saved = mrp > price ? mrp - price : 0;
-
-  if (mrp > price) {
-    return `
-      <div class="price-section">
-        <div class="price-row">
-          <span class="mrp-strike">₹${mrp.toLocaleString('en-IN')}.00</span>
-          <span class="price">₹${price.toLocaleString('en-IN')}.00</span>
-        </div>
-        <div class="saved-text">You saved ₹${saved.toLocaleString('en-IN')}</div>
-      </div>
-    `;
-  }
-  return `
-    <div class="price-section">
-      <div class="price-row">
-        <span class="price">₹${price.toLocaleString('en-IN')}.00</span>
-      </div>
-    </div>
-  `;
-}
-
-// ---------- Product card ----------
+// ---------- Product card (Bestify card design) ----------
 function productCardHTML(p) {
   const hasStock = typeof p.stock === "number";
   const outOfStock = hasStock && p.stock === 0;
   const lowStock = hasStock && p.stock > 0 && p.stock <= 5;
-  const desc = p.description || "";
+
+  const mrp = Number(p.mrp) || 0;
+  const price = Number(p.price) || 0;
+  const hasDiscount = mrp > price;
+  const pct = hasDiscount ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
   return `
-    <div class="product-card" data-id="${p.id}">
-      <img src="${p.image}" alt="${p.productName}">
-      <div class="product-info">
-        <h3>${p.productName}</h3>
-        ${priceBlockHTML(p)}
-        
-        ${desc ? `
-          <p class="product-description truncated">${desc}</p>
-          <button class="view-more-btn">View More</button>
-        ` : ""}
+    <div class="bf-card" data-id="${p.id}">
+      ${hasDiscount ? `<span class="bf-sale-badge">${pct}% OFF</span>` : ""}
 
-        ${hasStock ? `<span class="stock-badge ${outOfStock ? "out" : lowStock ? "low" : "in"}">
+      <div class="bf-carousel">
+        <img src="${p.image}" alt="${p.productName}">
+      </div>
+
+      <h2 class="bf-title">${p.productName}</h2>
+
+      <div class="bf-price-section">
+        <div class="bf-price-row">
+          ${hasDiscount ? `<span class="bf-original-price">₹${mrp}</span>` : ""}
+          <span class="bf-current-price">₹${price}</span>
+        </div>
+        ${hasDiscount ? `<div class="bf-saved-text">You saved ₹${mrp - price}</div>` : ""}
+        ${hasStock ? `<span class="stock-badge ${outOfStock ? "out" : lowStock ? "low" : "in"}" style="margin-top:6px;display:inline-block;">
           ${outOfStock ? "Out of Stock" : lowStock ? `Only ${p.stock} left` : "In Stock"}
         </span>` : ""}
-        
-        <div class="product-card-actions">
-          <button class="buy-btn" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>
-            ${outOfStock ? "Out of Stock" : "Add to Cart"}
-          </button>
-          <button class="order-btn" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>
-            Order
-          </button>
-        </div>
+      </div>
+
+      <p class="bf-description truncated">${p.description}</p>
+      <button type="button" class="bf-view-more-btn">View More</button>
+
+      <div class="bf-button-group">
+        <button class="bf-btn-cart" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>🛒 Add</button>
+        <button class="bf-btn-buy" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>${outOfStock ? "Out of Stock" : "Buy Now"}</button>
       </div>
     </div>
   `;
@@ -214,33 +195,30 @@ async function handleAddToCart(id) {
 function attachCardEvents(container) {
   container.addEventListener("click", (e) => {
 
-    // View More Button Toggle
-    const viewMoreBtn = e.target.closest(".view-more-btn");
+    const viewMoreBtn = e.target.closest(".bf-view-more-btn");
     if (viewMoreBtn) {
       e.stopPropagation();
       const desc = viewMoreBtn.previousElementSibling;
-      if (desc && desc.classList.contains("product-description")) {
-        desc.classList.toggle("truncated");
-        viewMoreBtn.innerText = desc.classList.contains("truncated") ? "View More" : "View Less";
-      }
+      desc.classList.toggle("truncated");
+      viewMoreBtn.textContent = desc.classList.contains("truncated") ? "View More" : "View Less";
       return;
     }
 
-    const buyBtn = e.target.closest(".buy-btn");
+    const cartBtn = e.target.closest(".bf-btn-cart");
+    if (cartBtn) {
+      e.stopPropagation();
+      handleAddToCart(cartBtn.dataset.id);
+      return;
+    }
+
+    const buyBtn = e.target.closest(".bf-btn-buy");
     if (buyBtn) {
       e.stopPropagation();
-      handleAddToCart(buyBtn.dataset.id);
+      window.location.href = `checkout.html?productId=${buyBtn.dataset.id}`;
       return;
     }
 
-    const orderBtn = e.target.closest(".order-btn");
-    if (orderBtn) {
-      e.stopPropagation();
-      window.location.href = `checkout.html?productId=${orderBtn.dataset.id}`;
-      return;
-    }
-
-    const card = e.target.closest(".product-card");
+    const card = e.target.closest(".bf-card");
     if (card) {
       window.location.href = `product.html?id=${card.dataset.id}`;
     }
@@ -285,7 +263,7 @@ function applyFilters() {
     return matchesCategory && matchesSearch;
   });
 
-  // Hide Best Sellers while actively searching
+  // Hide Best Sellers while actively searching, to avoid confusing "search not working"
   if (featuredTitle && featuredContainer) {
     const show = !term && featured_cache.length > 0;
     featuredTitle.style.display = show ? "block" : "none";
