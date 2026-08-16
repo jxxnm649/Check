@@ -85,6 +85,8 @@ async function loadProduct() {
          </div>`
       : `<div class="pd-price-row"><span class="price">₹${price}</span></div>`;
 
+    const images = (product.images && product.images.length) ? product.images : [product.image];
+
     productDiv.innerHTML = `
 <div class="pd-wrap">
 
@@ -97,8 +99,17 @@ async function loadProduct() {
   <div class="pd-gallery">
     <div class="pd-image-wrap">
       ${hasDiscount ? `<span class="pd-discount-badge">${pct}% OFF</span>` : ""}
-      <img class="pd-image" src="${product.image}" alt="${product.productName}">
+      <img class="pd-image" id="pdMainImage" src="${images[0]}" alt="${product.productName}">
     </div>
+
+    ${images.length > 1 ? `
+    <div class="pd-thumb-row" id="pdThumbRow">
+      ${images.map((img, i) => `
+        <button type="button" class="pd-thumb${i === 0 ? " selected" : ""}" data-src="${img}">
+          <img src="${img}" alt="${product.productName} ${i + 1}">
+        </button>
+      `).join("")}
+    </div>` : ""}
   </div>
 
   <div class="pd-content">
@@ -170,6 +181,16 @@ async function loadProduct() {
 
 <div id="relatedSection"></div>
 `;
+
+    if (images.length > 1) {
+      document.getElementById("pdThumbRow").addEventListener("click", (e) => {
+        const btn = e.target.closest(".pd-thumb");
+        if (!btn) return;
+        document.getElementById("pdMainImage").src = btn.dataset.src;
+        document.querySelectorAll(".pd-thumb").forEach(t => t.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+    }
 
     document.getElementById("qtyMinus").addEventListener("click", () => {
       currentQty = Math.max(1, currentQty - 1);

@@ -18,21 +18,42 @@ const form = document.getElementById("productForm");
 const productsDiv = document.getElementById("products");
 
 const imageFile = document.getElementById("imageFile");
-const preview = document.getElementById("preview");
+const previewRow = document.getElementById("previewRow");
 
 let editMode = false;
 let editProductId = null;
+let existingImages = [];
 imageFile.value = "";
 imageFile.addEventListener("change", () => {
 
-    const file = imageFile.files[0];
+    const files = Array.from(imageFile.files);
 
-    if (!file) return;
+    if (files.length === 0) {
+        renderPreview();
+        return;
+    }
 
-    preview.src = URL.createObjectURL(file);
-    preview.style.display = "block";
+    previewRow.innerHTML = "";
+    files.forEach((file) => {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(file);
+        img.width = 90;
+        img.style.borderRadius = "10px";
+        previewRow.appendChild(img);
+    });
 
 });
+
+function renderPreview() {
+    previewRow.innerHTML = "";
+    existingImages.forEach((url) => {
+        const img = document.createElement("img");
+        img.src = url;
+        img.width = 90;
+        img.style.borderRadius = "10px";
+        previewRow.appendChild(img);
+    });
+}
 
 onAuthStateChanged(auth, async (user) => {
 
@@ -53,40 +74,43 @@ onAuthStateChanged(auth, async (user) => {
 
 });
 
-async function uploadImage() {
+async function uploadImages() {
 
-    const file = imageFile.files[0];
+    const files = Array.from(imageFile.files);
 
-    if (!file) {
+    if (files.length === 0) {
 
-        if (editMode) {
-
-            const oldDoc = await getDoc(doc(db, "products", editProductId));
-            return oldDoc.data().image;
-
+        if (editMode && existingImages.length > 0) {
+            return existingImages;
         }
 
-        alert("Select Image");
+        alert("Select at least one image");
         return null;
 
     }
 
-    const formData = new FormData();
+    const uploadedUrls = [];
 
-    formData.append("file", file);
-    formData.append("upload_preset", "Bestifyimg");
+    for (const file of files) {
 
-    const response = await fetch(
-        "https://api.cloudinary.com/v1_1/rgksliph/image/upload",
-        {
-            method: "POST",
-            body: formData
-        }
-    );
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", "Bestifyimg");
 
-    const data = await response.json();
+        const response = await fetch(
+            "https://api.cloudinary.com/v1_1/rgksliph/image/upload",
+            {
+                method: "POST",
+                body: formData
+            }
+        );
 
-    return data.secure_url;
+        const data = await response.json();
+        uploadedUrls.push(data.secure_url);
+
+    }
+
+    return uploadedUrls;
 
 }
 
@@ -94,13 +118,14 @@ form.addEventListener("submit", async (e) => {
 
     e.preventDefault();
 
-    const imageUrl = await uploadImage();
+    const imageUrls = await uploadImages();
 
-    if (!imageUrl) return;
+    if (!imageUrls || imageUrls.length === 0) return;
 
     const productData = {
 
-        image: imageUrl,
+        image: imageUrls[0],
+        images: imageUrls,
         productName: document.getElementById("productName").value,
         category: document.getElementById("category").value,
         mrp: document.getElementById("mrp").value ? Number(document.getElementById("mrp").value) : 0,
@@ -143,12 +168,11 @@ form.addEventListener("submit", async (e) => {
 
     form.reset();
 
-preview.style.display = "none";
-preview.src = "";
+    previewRow.innerHTML = "";
+    existingImages = [];
+    imageFile.value = "";
 
-imageFile.value = "";
-
-loadProducts();
+    loadProducts();
 
 });
 
@@ -247,8 +271,9 @@ window.editProduct = async function(id) {
 
         const product = productSnap.data();
 
-        preview.src = product.image;
-        preview.style.display = "block";
+        existingImages = product.images && product.images.length ? product.images : (product.image ? [product.image] : []);
+        imageFile.value = "";
+        renderPreview();
 
         document.getElementById("productName").value = product.productName;
         document.getElementById("category").value = product.category;

@@ -22,23 +22,20 @@
 
 <form id="productForm">
 
-  <label>Select Product Image</label>
+  <label>Select Product Images (first one is main image)</label>
 
 <input
   type="file"
   id="imageFile"
   accept="image/*"
-  required
+  multiple
 >
 
 <br><br>
 
-<img
-  id="preview"
-  width="180"
-  style="display:none;border-radius:10px;"
->
+<div id="previewRow" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
 
+<br>
   <input
     type="text"
     id="productName"
