@@ -41,11 +41,11 @@ onAuthStateChanged(auth, async (user) => {
 
       const data = docSnap.data();
 
-      welcome.innerHTML = `👋 Welcome <b>${data.name}</b>`;
+      if (welcome) welcome.innerHTML = `👋 Welcome <b>${data.name}</b>`;
 
     } else {
 
-      welcome.innerHTML = `👋 Welcome <b>${user.email}</b>`;
+      if (welcome) welcome.innerHTML = `👋 Welcome <b>${user.email}</b>`;
 
     }
 
@@ -53,7 +53,7 @@ onAuthStateChanged(auth, async (user) => {
 
     console.log(error);
 
-    welcome.innerHTML = `👋 Welcome <b>${user.email}</b>`;
+    if (welcome) welcome.innerHTML = `👋 Welcome <b>${user.email}</b>`;
 
   }
 
@@ -67,6 +67,8 @@ const banners = [
 ];
 
 function renderBanner() {
+  if (!bannerTrack || !bannerDots) return;
+
   bannerTrack.innerHTML = banners.map(b => `
     <div class="banner-slide ${b.cls}">
       <h3>${b.title}</h3>
@@ -81,6 +83,7 @@ function renderBanner() {
 
 let bannerIndex = 0;
 function goToBanner(i) {
+  if (!bannerTrack || !bannerDots) return;
   bannerIndex = i;
   bannerTrack.style.transform = `translateX(-${i * 100}%)`;
   [...bannerDots.children].forEach((dot, idx) =>
@@ -89,20 +92,23 @@ function goToBanner(i) {
 }
 
 function startBannerAuto() {
+  if (!bannerTrack || !bannerDots) return;
   setInterval(() => {
     goToBanner((bannerIndex + 1) % banners.length);
   }, 4000);
 }
 
-renderBanner();
-goToBanner(0);
-startBannerAuto();
+if (bannerTrack && bannerDots) {
+  renderBanner();
+  goToBanner(0);
+  startBannerAuto();
 
-bannerDots.addEventListener("click", (e) => {
-  if (e.target.dataset.i !== undefined) {
-    goToBanner(Number(e.target.dataset.i));
-  }
-});
+  bannerDots.addEventListener("click", (e) => {
+    if (e.target.dataset.i !== undefined) {
+      goToBanner(Number(e.target.dataset.i));
+    }
+  });
+}
 
 // ---------- Skeleton ----------
 function renderSkeletons(container, count = 4) {
