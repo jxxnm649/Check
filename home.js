@@ -149,14 +149,10 @@ function productCardHTML(p) {
           ${hasDiscount ? `<span class="bf-original-price">₹${mrp}</span>` : ""}
           <span class="bf-current-price">₹${price}</span>
         </div>
-        ${hasDiscount ? `<div class="bf-saved-text">You saved ₹${mrp - price}</div>` : ""}
         ${hasStock ? `<span class="stock-badge ${outOfStock ? "out" : lowStock ? "low" : "in"}" style="margin-top:6px;display:inline-block;">
           ${outOfStock ? "Out of Stock" : lowStock ? `Only ${p.stock} left` : "In Stock"}
         </span>` : ""}
       </div>
-
-      <p class="bf-description truncated">${p.description}</p>
-      <button type="button" class="bf-view-more-btn">View More</button>
 
       <div class="bf-button-group">
         <button class="bf-btn-cart" data-id="${p.id}" ${outOfStock ? "disabled" : ""}>🛒 Add</button>
@@ -200,15 +196,6 @@ async function handleAddToCart(id) {
 
 function attachCardEvents(container) {
   container.addEventListener("click", (e) => {
-
-    const viewMoreBtn = e.target.closest(".bf-view-more-btn");
-    if (viewMoreBtn) {
-      e.stopPropagation();
-      const desc = viewMoreBtn.previousElementSibling;
-      desc.classList.toggle("truncated");
-      viewMoreBtn.textContent = desc.classList.contains("truncated") ? "View More" : "View Less";
-      return;
-    }
 
     const cartBtn = e.target.closest(".bf-btn-cart");
     if (cartBtn) {
