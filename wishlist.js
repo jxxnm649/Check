@@ -49,7 +49,7 @@ onAuthStateChanged(auth, async (user) => {
 function render() {
 
   if (wishlistItems.length === 0) {
-    wishlistDiv.innerHTML = "<h2>Your Wishlist is Empty ❤️</h2>";
+    wishlistDiv.innerHTML = "<h2>You haven't liked anything yet ❤️</h2>";
     return;
   }
 
