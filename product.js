@@ -8,6 +8,9 @@ import {
   doc,
   getDoc,
   setDoc,
+  deleteDoc,
+  updateDoc,
+  increment,
   collection,
   getDocs,
   query,
@@ -22,15 +25,22 @@ const productId = params.get("id");
 
 let currentUser = null;
 let currentQty = 1;
-let selectedSize = null;
-let selectedColour = null;
+let productData = null;
+let userHasLiked = false;
 
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   updateCartBadge();
+  checkLikedStatus();
+});
+
+document.getElementById("cartIconWrap")?.addEventListener("click", () => {
+  window.location.href = "cart.html";
 });
 
 loadProduct();
+
+/* ---------------- Cart badge ---------------- */
 
 async function updateCartBadge() {
   const badge = document.getElementById("pdCartBadge");
@@ -54,6 +64,21 @@ function deliveryEstimateText() {
   return d.toLocaleDateString("en-IN", options);
 }
 
+/* ---------------- Icons ---------------- */
+
+const ICONS = {
+  like: `<svg class="like-symbol" viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14Z"/><path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>`,
+  catalogs: `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+  share: `<svg viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>`,
+  truck: `<svg viewBox="0 0 24 24"><rect x="1" y="6" width="15" height="12" rx="1"/><path d="M16 10h4l3 3v5h-7z"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>`,
+  returns: `<svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>`,
+  shield: `<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>`,
+  cart: `<svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`,
+  bolt: `<svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg>`
+};
+
+/* ---------------- Load product ---------------- */
+
 async function loadProduct() {
 
   try {
@@ -66,165 +91,126 @@ async function loadProduct() {
       return;
     }
 
-    const product = productSnap.data();
+    productData = productSnap.data();
+    const product = productData;
 
     const hasStock = typeof product.stock === "number";
     const outOfStock = hasStock && product.stock === 0;
-    const lowStock = hasStock && product.stock > 0 && product.stock <= 5;
 
     const mrp = Number(product.mrp) || 0;
     const price = Number(product.price) || 0;
     const hasDiscount = mrp > price;
     const pct = hasDiscount ? Math.round(((mrp - price) / mrp) * 100) : 0;
 
-    const priceHTML = hasDiscount
-      ? `<div class="pd-price-row">
-           <span class="price">₹${price}</span>
-           <span class="mrp-strike">₹${mrp}</span>
-           <span class="off-badge">Save ₹${mrp - price}</span>
-         </div>`
-      : `<div class="pd-price-row"><span class="price">₹${price}</span></div>`;
-
     const images = (product.images && product.images.length) ? product.images : [product.image];
+    const likeCount = Number(product.likes) || 0;
 
     productDiv.innerHTML = `
-<div class="pd-wrap">
 
-  <p class="pd-breadcrumb">
-    <a href="home.html">Home</a> &gt;
-    <span>${product.category}</span> &gt;
-    <span class="pd-breadcrumb-current">${product.productName}</span>
-  </p>
-
-  <div class="pd-gallery">
-    <div class="pd-image-wrap">
-      ${hasDiscount ? `<span class="pd-discount-badge">${pct}% OFF</span>` : ""}
-      <img class="pd-image" id="pdMainImage" src="${images[0]}" alt="${product.productName}">
+  <div class="image-wrapper">
+    <div class="image-container" id="imageContainer">
+      <img id="pdMainImage" src="${images[0]}" alt="${product.productName}">
     </div>
+  </div>
 
-    ${images.length > 1 ? `
-    <div class="pd-thumb-row" id="pdThumbRow">
+  ${images.length > 1 ? `
+  <div class="similar-section">
+    <p class="similar-title">${images.length} Similar Products</p>
+    <div class="thumbnail-group" id="thumbGroup">
       ${images.map((img, i) => `
-        <button type="button" class="pd-thumb${i === 0 ? " selected" : ""}" data-src="${img}">
+        <div class="thumb-box${i === 0 ? " active" : ""}" data-src="${img}">
           <img src="${img}" alt="${product.productName} ${i + 1}">
-        </button>
+        </div>
       `).join("")}
-    </div>` : ""}
+    </div>
+  </div>` : ""}
+
+  <div class="details-section">
+    <p class="product-title">${product.productName}</p>
+
+    <div class="horizontal-action-bar">
+      <div class="action-btn-big" id="likeBtn">
+        ${ICONS.like}
+        <span id="likeLabel">${likeCount} Likes</span>
+      </div>
+      <div class="action-btn-big" id="catalogsBtn">
+        ${ICONS.catalogs}
+        <span>Catalogs</span>
+      </div>
+      <div class="action-btn-big" id="shareBtn">
+        ${ICONS.share}
+        <span>Share</span>
+      </div>
+    </div>
+
+    <div class="price-row">
+      <span class="current-price">₹${price}</span>
+      ${hasDiscount ? `<span class="original-price">₹${mrp}</span><span class="discount">${pct}% off</span>` : ""}
+    </div>
+    ${hasDiscount ? `<div class="offer-tag">✓ UPI Offer applied for you!!</div>` : ""}
   </div>
 
-  <div class="pd-content">
-
-    <p class="pd-category">${product.category}</p>
-    <h1>${product.productName}</h1>
-
-    ${priceHTML}
-    <p class="pd-tax-note">Inclusive of all taxes</p>
-
-    <div class="pd-stock-row">
-      ${hasStock
-        ? `<span class="stock-badge ${outOfStock ? "out" : lowStock ? "low" : "in"}">
-             ${outOfStock ? "Out of Stock" : lowStock ? `Only ${product.stock} left` : "In Stock"}
-           </span>`
-        : `<span class="stock-badge in">In Stock</span>`}
-      ${!outOfStock ? `<p class="pd-delivery-note">🚚 Free delivery by <b>${deliveryEstimateText()}</b></p>` : ""}
-    </div>
-
-    ${(product.sizes && product.sizes.length) ? `
-    <div class="pd-variant-row">
-      <p class="pd-variant-label">Size</p>
-      <div class="pd-variant-options" id="sizeOptions">
-        ${product.sizes.map((s, i) => `<button type="button" class="pd-variant-chip${i === 0 ? " selected" : ""}" data-size="${s}">${s}</button>`).join("")}
-      </div>
-    </div>` : ""}
-
-    ${(product.colours && product.colours.length) ? `
-    <div class="pd-variant-row">
-      <p class="pd-variant-label">Colour</p>
-      <div class="pd-variant-options" id="colourOptions">
-        ${product.colours.map((c, i) => `<button type="button" class="pd-variant-chip${i === 0 ? " selected" : ""}" data-colour="${c}">${c}</button>`).join("")}
-      </div>
-    </div>` : ""}
-
-    <hr class="pd-divider">
-
-    <div class="pd-qty-row">
-      <p class="pd-qty-label">Quantity</p>
-      <div class="pd-qty-stepper">
-        <button id="qtyMinus" type="button">−</button>
-        <span id="qtyValue">1</span>
-        <button id="qtyPlus" type="button">+</button>
+  <div class="service-section">
+    <div class="service-card full-width">
+      ${ICONS.truck}
+      <div class="service-info-horizontal">
+        <span class="service-title">Expected Delivery</span>
+        <span class="service-sub">${outOfStock ? "Currently unavailable" : `By ${deliveryEstimateText()}`}</span>
       </div>
     </div>
-
-    <div class="pd-actions">
-      <button class="pd-buy-btn" id="buyNowBtn" ${outOfStock ? "disabled" : ""}>
-        Buy Now
-      </button>
-      <button class="pd-add-btn" id="addToCartBtn" ${outOfStock ? "disabled" : ""}>
-        ${outOfStock ? "Out of Stock" : "Add to Cart"}
-      </button>
+    <div class="service-grid-2">
+      <div class="service-card">
+        ${ICONS.returns}
+        <div class="service-info">
+          <span class="service-title">7 Days Return</span>
+          <span class="service-sub">Easy Replacement</span>
+        </div>
+      </div>
+      <div class="service-card">
+        ${ICONS.shield}
+        <div class="service-info">
+          <span class="service-title">6 Month Warranty</span>
+          <span class="service-sub">Brand Cover</span>
+        </div>
+      </div>
     </div>
-
-    <div class="pd-trust-row">
-      <div class="pd-trust-item"><span>🛡️</span><p>1 Year Warranty</p></div>
-      <div class="pd-trust-item"><span>↩️</span><p>7-Day Returns</p></div>
-      <div class="pd-trust-item"><span>🚚</span><p>Fast Delivery</p></div>
-    </div>
-
-    <hr class="pd-divider">
-
-    <p class="pd-description">${product.description}</p>
-
   </div>
 
-</div>
+  <div class="content-box">
+    <p class="section-heading">Description</p>
+    <p class="description-text">${product.description || ""}</p>
+  </div>
 
-<div id="relatedSection"></div>
+  ${buildAdditionalDetailsHTML(product)}
+
+  <div id="relatedSection"></div>
 `;
 
+    /* Thumbnails */
     if (images.length > 1) {
-      document.getElementById("pdThumbRow").addEventListener("click", (e) => {
-        const btn = e.target.closest(".pd-thumb");
-        if (!btn) return;
-        document.getElementById("pdMainImage").src = btn.dataset.src;
-        document.querySelectorAll(".pd-thumb").forEach(t => t.classList.remove("selected"));
-        btn.classList.add("selected");
+      document.getElementById("thumbGroup").addEventListener("click", (e) => {
+        const box = e.target.closest(".thumb-box");
+        if (!box) return;
+        document.getElementById("pdMainImage").src = box.dataset.src;
+        document.querySelectorAll(".thumb-box").forEach(t => t.classList.remove("active"));
+        box.classList.add("active");
       });
     }
 
-    document.getElementById("qtyMinus").addEventListener("click", () => {
-      currentQty = Math.max(1, currentQty - 1);
-      document.getElementById("qtyValue").textContent = currentQty;
+    /* Like button */
+    document.getElementById("likeBtn").addEventListener("click", toggleLike);
+    checkLikedStatus();
+
+    /* Catalogs button -> go to category listing */
+    document.getElementById("catalogsBtn").addEventListener("click", () => {
+      window.location.href = `products.html?category=${encodeURIComponent(product.category || "")}`;
     });
-    document.getElementById("qtyPlus").addEventListener("click", () => {
-      const maxQty = hasStock ? product.stock : 9;
-      currentQty = Math.min(maxQty || 9, currentQty + 1);
-      document.getElementById("qtyValue").textContent = currentQty;
-    });
-    document.getElementById("addToCartBtn").addEventListener("click", addToCart);
-    document.getElementById("buyNowBtn").addEventListener("click", buyNow);
 
-    if (product.sizes && product.sizes.length) {
-      selectedSize = product.sizes[0];
-      document.getElementById("sizeOptions").addEventListener("click", (e) => {
-        const btn = e.target.closest(".pd-variant-chip");
-        if (!btn) return;
-        selectedSize = btn.dataset.size;
-        document.querySelectorAll("#sizeOptions .pd-variant-chip").forEach(c => c.classList.remove("selected"));
-        btn.classList.add("selected");
-      });
-    }
+    /* Share button */
+    document.getElementById("shareBtn").addEventListener("click", () => shareProduct(product));
 
-    if (product.colours && product.colours.length) {
-      selectedColour = product.colours[0];
-      document.getElementById("colourOptions").addEventListener("click", (e) => {
-        const btn = e.target.closest(".pd-variant-chip");
-        if (!btn) return;
-        selectedColour = btn.dataset.colour;
-        document.querySelectorAll("#colourOptions .pd-variant-chip").forEach(c => c.classList.remove("selected"));
-        btn.classList.add("selected");
-      });
-    }
+    /* Bottom bar (Add/Qty/Buy) */
+    renderBottomBar(outOfStock, hasStock ? product.stock : 9);
 
     loadRelatedProducts(product.category);
 
@@ -236,6 +222,191 @@ async function loadProduct() {
   }
 
 }
+
+/* ---------------- Additional Details table ---------------- */
+
+function buildAdditionalDetailsHTML(product) {
+  const rows = [];
+
+  if (product.additionalDetails && typeof product.additionalDetails === "object") {
+    Object.entries(product.additionalDetails).forEach(([label, value]) => {
+      rows.push({ label, value });
+    });
+  } else {
+    if (product.material) rows.push({ label: "Material", value: product.material });
+    if (product.returnPolicy) rows.push({ label: "Return Policy", value: product.returnPolicy });
+    if (product.warranty) rows.push({ label: "Warranty", value: product.warranty });
+  }
+
+  if (rows.length === 0) return "";
+
+  return `
+  <div class="content-box">
+    <p class="section-heading">Additional Details</p>
+    <table class="details-table">
+      ${rows.map(r => `
+        <tr>
+          <td class="label">${r.label}</td>
+          <td class="value">${r.value}</td>
+        </tr>
+      `).join("")}
+    </table>
+  </div>`;
+}
+
+/* ---------------- Likes ---------------- */
+
+async function checkLikedStatus() {
+  const likeBtn = document.getElementById("likeBtn");
+  if (!likeBtn) return;
+
+  if (!currentUser) {
+    userHasLiked = false;
+    likeBtn.classList.remove("active-like");
+    return;
+  }
+
+  try {
+    const likeRef = doc(db, "users", currentUser.uid, "likes", productId);
+    const likeSnap = await getDoc(likeRef);
+    userHasLiked = likeSnap.exists();
+    likeBtn.classList.toggle("active-like", userHasLiked);
+  } catch (e) { /* ignore */ }
+}
+
+async function toggleLike() {
+  if (!currentUser) {
+    alert("Please Login First");
+    window.location.href = "login.html";
+    return;
+  }
+
+  const likeBtn = document.getElementById("likeBtn");
+  const likeLabel = document.getElementById("likeLabel");
+  const likeRef = doc(db, "users", currentUser.uid, "likes", productId);
+  const productRef = doc(db, "products", productId);
+
+  try {
+    if (userHasLiked) {
+      await deleteDoc(likeRef);
+      await updateDoc(productRef, { likes: increment(-1) });
+      userHasLiked = false;
+      likeBtn.classList.remove("active-like");
+    } else {
+      await setDoc(likeRef, { likedAt: Date.now() });
+      await updateDoc(productRef, { likes: increment(1) });
+      userHasLiked = true;
+      likeBtn.classList.add("active-like");
+    }
+
+    const freshSnap = await getDoc(productRef);
+    const newCount = Number(freshSnap.data().likes) || 0;
+    likeLabel.textContent = `${newCount} Likes`;
+
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+/* ---------------- Share ---------------- */
+
+async function shareProduct(product) {
+  const shareUrl = window.location.href;
+  const shareData = {
+    title: product.productName,
+    text: `Check out ${product.productName} on Bestify`,
+    url: shareUrl
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      alert("Link copied to clipboard 🔗");
+    }
+  } catch (e) { /* user cancelled share, ignore */ }
+}
+
+/* ---------------- Bottom bar: Add / Qty / Buy ---------------- */
+
+function renderBottomBar(outOfStock, maxQty) {
+  const container = document.querySelector(".container");
+
+  const bar = document.createElement("div");
+  bar.className = "button-group";
+  bar.innerHTML = `
+    <div class="cart-action-wrapper">
+      <button class="btn-add-main" id="addBtnMain" ${outOfStock ? "disabled" : ""}>
+        ${ICONS.cart} ${outOfStock ? "Out of Stock" : "ADD"}
+      </button>
+      <div class="qty-box" id="qtyBox">
+        <button class="qty-btn-action" id="qtyMinus">−</button>
+        <span class="qty-number" id="qtyNumber">1</span>
+        <button class="qty-btn-action" id="qtyPlus">+</button>
+      </div>
+    </div>
+    <button class="btn-buy" id="buyNowBtn" ${outOfStock ? "disabled" : ""}>
+      ${ICONS.bolt} Buy Now
+    </button>
+  `;
+  container.appendChild(bar);
+
+  const addBtnMain = document.getElementById("addBtnMain");
+  const qtyBox = document.getElementById("qtyBox");
+  const qtyNumber = document.getElementById("qtyNumber");
+
+  addBtnMain.addEventListener("click", async () => {
+    if (outOfStock) return;
+    currentQty = 1;
+    const ok = await addToCart(currentQty);
+    if (ok) {
+      addBtnMain.style.display = "none";
+      qtyBox.style.display = "flex";
+      qtyNumber.textContent = currentQty;
+    }
+  });
+
+  document.getElementById("qtyMinus").addEventListener("click", async () => {
+    if (currentQty <= 1) {
+      await removeFromCart();
+      currentQty = 1;
+      qtyBox.style.display = "none";
+      addBtnMain.style.display = "flex";
+      return;
+    }
+    currentQty -= 1;
+    qtyNumber.textContent = currentQty;
+    await updateCartQty(currentQty);
+  });
+
+  document.getElementById("qtyPlus").addEventListener("click", async () => {
+    if (currentQty >= maxQty) return;
+    currentQty += 1;
+    qtyNumber.textContent = currentQty;
+    await updateCartQty(currentQty);
+  });
+
+  document.getElementById("buyNowBtn").addEventListener("click", buyNow);
+
+  prefillCartState(addBtnMain, qtyBox, qtyNumber);
+}
+
+async function prefillCartState(addBtnMain, qtyBox, qtyNumber) {
+  if (!currentUser) return;
+  try {
+    const cartRef = doc(db, "users", currentUser.uid, "cart", productId);
+    const cartSnap = await getDoc(cartRef);
+    if (cartSnap.exists()) {
+      currentQty = cartSnap.data().qty || 1;
+      qtyNumber.textContent = currentQty;
+      addBtnMain.style.display = "none";
+      qtyBox.style.display = "flex";
+    }
+  } catch (e) { /* ignore */ }
+}
+
+/* ---------------- Related products ---------------- */
 
 async function loadRelatedProducts(category) {
   const section = document.getElementById("relatedSection");
@@ -260,29 +431,29 @@ async function loadRelatedProducts(category) {
     }
 
     section.innerHTML = `
-      <div class="pd-related">
-        <h2 class="pd-related-title">Recommended Catalogs</h2>
-        <div class="pd-related-grid">
+      <div class="content-box">
+        <p class="section-heading">Recommended Catalogs</p>
+        <div class="catalog-grid">
           ${related.map((p) => {
             const rMrp = Number(p.mrp) || 0;
             const rPrice = Number(p.price) || 0;
             const rHasDiscount = rMrp > rPrice;
             const rPct = rHasDiscount ? Math.round(((rMrp - rPrice) / rMrp) * 100) : 0;
-
-            // badge priority: custom "tag" field from Firestore, else auto discount %, else nothing
             const badgeText = p.tag ? p.tag : (rHasDiscount ? `${rPct}% Off` : "");
 
             return `
-              <a class="pd-related-card" href="product.html?id=${p.id}">
-                <div class="pd-related-img">
+              <a class="catalog-card" href="product.html?id=${p.id}" style="text-decoration:none;">
+                <div class="catalog-img-wrapper">
                   <img src="${p.image}" alt="${p.productName}">
                 </div>
-                <p class="pd-related-name">${p.productName}</p>
-                <p class="pd-related-price">
-                  ₹${rPrice}
-                  ${rHasDiscount ? `<span class="pd-related-mrp">₹${rMrp}</span>` : ""}
-                </p>
-                ${badgeText ? `<span class="pd-related-badge">${badgeText}</span>` : ""}
+                <div class="catalog-info">
+                  <p class="catalog-item-title">${p.productName}</p>
+                  <div class="catalog-price-row">
+                    <span class="catalog-price">₹${rPrice}</span>
+                    ${rHasDiscount ? `<span class="catalog-original">₹${rMrp}</span>` : ""}
+                  </div>
+                  ${badgeText ? `<span class="catalog-badge">${badgeText}</span>` : ""}
+                </div>
               </a>
             `;
           }).join("")}
@@ -295,50 +466,61 @@ async function loadRelatedProducts(category) {
   }
 }
 
-async function addToCart() {
+/* ---------------- Cart actions ---------------- */
 
+async function addToCart(qty) {
   if (!currentUser) {
     alert("Please Login First");
     window.location.href = "login.html";
-    return;
+    return false;
   }
 
   try {
-
     const productRef = doc(db, "products", productId);
     const productSnap = await getDoc(productRef);
-
     if (!productSnap.exists()) {
       alert("Product Not Found");
-      return;
+      return false;
     }
 
     const cartRef = doc(db, "users", currentUser.uid, "cart", productId);
-    const cartSnap = await getDoc(cartRef);
-    const existingQty = cartSnap.exists() ? (cartSnap.data().qty || 1) : 0;
-
     await setDoc(cartRef, {
       ...productSnap.data(),
-      qty: existingQty + currentQty,
-      ...(selectedSize ? { selectedSize } : {}),
-      ...(selectedColour ? { selectedColour } : {})
+      qty
     });
 
     updateCartBadge();
-    alert("Added To Cart ✅");
+    return true;
 
   } catch (error) {
-
     alert(error.message);
     console.log(error);
-
+    return false;
   }
+}
 
+async function updateCartQty(qty) {
+  if (!currentUser) return;
+  try {
+    const cartRef = doc(db, "users", currentUser.uid, "cart", productId);
+    await setDoc(cartRef, { qty }, { merge: true });
+    updateCartBadge();
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function removeFromCart() {
+  if (!currentUser) return;
+  try {
+    const cartRef = doc(db, "users", currentUser.uid, "cart", productId);
+    await deleteDoc(cartRef);
+    updateCartBadge();
+  } catch (error) {
+    console.log(error);
+  }
 }
 
 function buyNow() {
-  let url = `checkout.html?productId=${productId}&qty=${currentQty}`;
-  if (selectedSize) url += `&size=${encodeURIComponent(selectedSize)}`;
-  if (selectedColour) url += `&colour=${encodeURIComponent(selectedColour)}`;
-  window.location.href = url;
+  window.location.href = `checkout.html?productId=${productId}&qty=${currentQty}`;
 }
