@@ -261,12 +261,17 @@ async function loadRelatedProducts(category) {
 
     section.innerHTML = `
       <div class="pd-related">
-        <h2 class="pd-related-title">You may also like</h2>
+        <h2 class="pd-related-title">Recommended Catalogs</h2>
         <div class="pd-related-grid">
           ${related.map((p) => {
             const rMrp = Number(p.mrp) || 0;
             const rPrice = Number(p.price) || 0;
             const rHasDiscount = rMrp > rPrice;
+            const rPct = rHasDiscount ? Math.round(((rMrp - rPrice) / rMrp) * 100) : 0;
+
+            // badge priority: custom "tag" field from Firestore, else auto discount %, else nothing
+            const badgeText = p.tag ? p.tag : (rHasDiscount ? `${rPct}% Off` : "");
+
             return `
               <a class="pd-related-card" href="product.html?id=${p.id}">
                 <div class="pd-related-img">
@@ -277,6 +282,7 @@ async function loadRelatedProducts(category) {
                   ₹${rPrice}
                   ${rHasDiscount ? `<span class="pd-related-mrp">₹${rMrp}</span>` : ""}
                 </p>
+                ${badgeText ? `<span class="pd-related-badge">${badgeText}</span>` : ""}
               </a>
             `;
           }).join("")}
