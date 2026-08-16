@@ -16,7 +16,7 @@ body{
 
 .brand-logo-img{
     width: 100%;
-    max-width: 320px;
+    max-width: 150px;
     height: auto;
     object-fit: contain;
 }
@@ -24,9 +24,19 @@ body{
 /* ---------- Social links (moved below search bar) ---------- */
 .container > .social-links{
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(4, 1fr);
     gap: 10px;
     margin: 4px 0 12px;
+}
+
+.container > .social-links .social-link{
+    justify-content: center;
+    padding: 14px 6px;
+}
+
+.container > .social-links .social-link i{
+    font-size: 24px;
+    width: auto;
 }
 
 .container{
