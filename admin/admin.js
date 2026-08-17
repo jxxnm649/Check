@@ -441,131 +441,31 @@ logoutBtn.addEventListener(
 
 
 /* ---------- Navigation ---------- */
-
 adminNav.addEventListener(
   "click",
   (e) => {
 
     const btn =
-      e.target.closest(
-        ".bf-admin-nav-item"
-      );
+      e.target.closest(".bf-admin-nav-item");
 
     if (!btn) return;
 
-    if (
-      btn.dataset.nav !== "dashboard"
-    ) {
+    const navId = btn.dataset.nav;
 
+    // Users
+    if (navId === "users") {
+      window.location.href = "users.html";
+      return;
+    }
+
+    // Other sections
+    if (navId !== "dashboard") {
       showToast(
         "This section is coming soon",
         "info"
       );
-
     }
 
     closeDrawer();
-
-  }
-);
-
-
-/* ---------- Retry ---------- */
-
-errorRetryBtn.addEventListener(
-  "click",
-  () => {
-    window.location.reload();
-  }
-);
-
-
-/* ============================================================
-   AUTH GUARD
-   ============================================================ */
-
-onAuthStateChanged(
-  auth,
-  async (user) => {
-
-    if (!user) {
-
-      showAuthRequired();
-      return;
-
-    }
-
-
-    try {
-
-      /*
-        Force refresh so the latest
-        admin:true custom claim is used.
-      */
-
-      const tokenResult =
-        await user.getIdTokenResult(true);
-
-      const claims =
-        tokenResult.claims || {};
-
-
-      /* ---------- ADMIN CHECK ---------- */
-
-      if (claims.admin !== true) {
-
-        showAccessDenied();
-        return;
-
-      }
-
-
-      /* ---------- USER INFO ---------- */
-
-      const displayName =
-        user.displayName ||
-        (
-          user.email
-            ? user.email.split("@")[0]
-            : "Admin"
-        );
-
-
-      userName.textContent =
-        displayName;
-
-      userEmail.textContent =
-        user.email || "";
-
-      userAvatar.textContent =
-        displayName
-          .charAt(0)
-          .toUpperCase();
-
-
-      /* ---------- NAV ---------- */
-
-      renderNav(claims);
-
-
-      /* ---------- SHOW ADMIN ---------- */
-
-      showShell();
-
-
-      /* ---------- LOAD DASHBOARD ---------- */
-
-      await loadDashboardMetrics();
-
-    } catch (error) {
-
-      console.error(error);
-
-      showError(
-        "We couldn't verify your admin access. Please try again."
-      );
-
-    }
-
   }
 );
