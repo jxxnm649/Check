@@ -9,7 +9,8 @@ import {
   getDocs,
   doc,
   getDoc,
-  updateDoc
+  updateDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 import {
@@ -317,9 +318,12 @@ function renderUserDetails(user) {
 
   userDetailsContent.innerHTML = `
     ${rows.join("")}
-    <div style="margin-top:16px;">
+    <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
       <button type="button" class="bf-btn bf-btn-secondary bf-btn-sm edit-user-btn">
         ✏️ Edit User
+      </button>
+      <button type="button" class="bf-btn bf-btn-danger bf-btn-sm delete-user-btn">
+        🗑️ Delete User
       </button>
     </div>
   `;
@@ -422,6 +426,64 @@ async function saveUserChanges(uid) {
   }
 }
 
+function renderDeleteConfirm(user) {
+  const name = user.name || user.fullName || user.displayName || "Unnamed User";
+  const email = user.email || "No email";
+
+  userDetailsContent.innerHTML = `
+    <div class="bf-state bf-state-error" style="padding:8px 0 16px;">
+      <div class="bf-state-icon">⚠️</div>
+      <p class="bf-state-title">Are you sure you want to delete this user?</p>
+      <p class="bf-state-text">
+        <strong>${escapeHtml(name)}</strong><br>
+        ${escapeHtml(email)}
+      </p>
+      <p class="bf-state-text" style="font-size:12px;">
+        This will permanently delete the Firestore user document. This action cannot be undone.
+      </p>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button type="button" class="bf-btn bf-btn-danger bf-btn-sm confirm-delete-btn">
+        🗑️ Delete User
+      </button>
+      <button type="button" class="bf-btn bf-btn-ghost bf-btn-sm cancel-delete-btn">
+        Cancel
+      </button>
+    </div>
+  `;
+}
+
+async function deleteUser(uid) {
+  const confirmBtn = document.querySelector(".confirm-delete-btn");
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = "Deleting...";
+  }
+
+  try {
+    await deleteDoc(doc(db, "users", uid));
+
+    allUsers = allUsers.filter(u => u.id !== uid);
+    currentDetailsUserId = null;
+
+    showToast("User deleted successfully", "success");
+    closeModal("userDetailsModal");
+
+    userCount.textContent = `Total Users: ${allUsers.length}`;
+    userSearch.dispatchEvent(new Event("input"));
+
+  } catch (error) {
+    console.error("Delete user error:", error);
+    showToast(error.message || "Failed to delete user. Please try again.", "danger");
+
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = "🗑️ Delete User";
+    }
+  }
+}
+
 usersList.addEventListener("click", async (e) => {
   const btn = e.target.closest(".view-details-btn");
   if (!btn) return;
@@ -464,6 +526,23 @@ userDetailsContent.addEventListener("click", (e) => {
   if (e.target.closest(".cancel-edit-btn")) {
     const user = allUsers.find(u => u.id === currentDetailsUserId);
     if (user) renderUserDetails(user);
+    return;
+  }
+
+  if (e.target.closest(".delete-user-btn")) {
+    const user = allUsers.find(u => u.id === currentDetailsUserId);
+    if (user) renderDeleteConfirm(user);
+    return;
+  }
+
+  if (e.target.closest(".cancel-delete-btn")) {
+    const user = allUsers.find(u => u.id === currentDetailsUserId);
+    if (user) renderUserDetails(user);
+    return;
+  }
+
+  if (e.target.closest(".confirm-delete-btn")) {
+    if (currentDetailsUserId) deleteUser(currentDetailsUserId);
     return;
   }
 });
@@ -593,4 +672,3 @@ onAuthStateChanged(
 
   }
 );
-            
