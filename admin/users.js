@@ -412,12 +412,15 @@ function updateOrdersContainer() {
   if (container) container.innerHTML = renderOrdersSectionHTML(currentDetailsUserId);
 }
 
+const ORDER_STATUS_OPTIONS = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled"];
+const PAYMENT_STATUS_OPTIONS = ["Pending", "Paid", "Failed", "Refunded"];
+
 // Fields already shown as dedicated rows below — everything else on
 // the order document is auto-listed so nothing genuinely present
 // gets hidden, without inventing rows for fields that don't exist.
 const ORDER_HANDLED_KEYS = new Set([
   "userId", "mobile", "phone", "address", "products",
-  "total", "totalPrice", "status",
+  "total", "totalPrice", "status", "paymentStatus",
   "createdAt", "updatedAt", "modifiedAt", "cancelledAt"
 ]);
 
@@ -443,7 +446,7 @@ function renderOrderDetails(order) {
   const total = order.total ?? order.totalPrice;
   rows.push(detailRow("Total amount", total !== undefined ? `₹${total}` : "Not available"));
   rows.push(detailRow("Order status", order.status || "Not available"));
-  rows.push(detailRow("Payment status", "Not available")); // no such field exists on order documents
+  rows.push(detailRow("Payment status", order.paymentStatus || "Not available"));
   rows.push(detailRow("Delivery address", order.address || "Not available"));
   rows.push(detailRow("Phone", order.mobile || order.phone || "Not available"));
   rows.push(detailRow("Created date", getCreatedDate(order)));
@@ -464,7 +467,126 @@ function renderOrderDetails(order) {
       rows.push(detailRow(formatFieldLabel(key), value));
     });
 
-  orderDetailsContent.innerHTML = rows.join("");
+  orderDetailsContent.innerHTML = `
+    ${rows.join("")}
+    <div class="bf-field" style="margin-top:16px;">
+      <label class="bf-label">Update Order Status</label>
+      <select class="bf-select" id="orderStatusSelect">
+        ${ORDER_STATUS_OPTIONS.map(opt =>
+          `<option value="${opt}" ${order.status === opt ? "selected" : ""}>${opt}</option>`
+        ).join("")}
+      </select>
+    </div>
+    <div style="margin-top:10px;">
+      <button
+        type="button"
+        class="bf-btn bf-btn-primary bf-btn-sm"
+        id="saveOrderStatusBtn"
+        data-order-id="${escapeHtml(order.id)}">
+        Save Status
+      </button>
+    </div>
+
+    <div class="bf-field" style="margin-top:16px;">
+      <label class="bf-label">Update Payment Status</label>
+      <select class="bf-select" id="paymentStatusSelect">
+        ${PAYMENT_STATUS_OPTIONS.map(opt =>
+          `<option value="${opt}" ${(order.paymentStatus || PAYMENT_STATUS_OPTIONS[0]) === opt ? "selected" : ""}>${opt}</option>`
+        ).join("")}
+      </select>
+    </div>
+    <div style="margin-top:10px;">
+      <button
+        type="button"
+        class="bf-btn bf-btn-primary bf-btn-sm"
+        id="savePaymentStatusBtn"
+        data-order-id="${escapeHtml(order.id)}">
+        Save Payment Status
+      </button>
+    </div>
+  `;
+}
+
+// Updates the "status" field — confirmed as the actual field name
+// used on order documents (checkout.js writes it, orders.js and the
+// existing admin.js orders page both read/update it the same way).
+async function saveOrderStatus(orderId) {
+  const select = document.getElementById("orderStatusSelect");
+  const saveBtn = document.getElementById("saveOrderStatusBtn");
+  if (!select || !saveBtn) return;
+
+  const newStatus = select.value;
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    await updateDoc(doc(db, "orders", orderId), { status: newStatus });
+
+    // Keep the cached order data in sync so both the modal and the
+    // list behind it reflect the new status immediately.
+    const orderIndex = currentOrdersState.orders.findIndex(o => o.id === orderId);
+    if (orderIndex !== -1) {
+      currentOrdersState.orders[orderIndex] = {
+        ...currentOrdersState.orders[orderIndex],
+        status: newStatus
+      };
+    }
+
+    showToast("Order status updated successfully", "success");
+
+    const updatedOrder = currentOrdersState.orders[orderIndex];
+    if (updatedOrder) renderOrderDetails(updatedOrder);
+
+    updateOrdersContainer();
+
+  } catch (error) {
+    console.error("Order status update error:", error);
+    showToast(error.message || "Failed to update order status. Please try again.", "danger");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Status";
+  }
+}
+
+// Order documents have no existing payment-status field (only
+// "paymentMethod" and, for online payments, "paymentId" — neither
+// represents a Pending/Paid/Failed/Refunded state). Per the task,
+// a new "paymentStatus" field is added, following the same naming
+// convention as the existing "status"/"paymentMethod"/"paymentId" fields.
+async function savePaymentStatus(orderId) {
+  const select = document.getElementById("paymentStatusSelect");
+  const saveBtn = document.getElementById("savePaymentStatusBtn");
+  if (!select || !saveBtn) return;
+
+  const newPaymentStatus = select.value;
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    await updateDoc(doc(db, "orders", orderId), { paymentStatus: newPaymentStatus });
+
+    const orderIndex = currentOrdersState.orders.findIndex(o => o.id === orderId);
+    if (orderIndex !== -1) {
+      currentOrdersState.orders[orderIndex] = {
+        ...currentOrdersState.orders[orderIndex],
+        paymentStatus: newPaymentStatus
+      };
+    }
+
+    showToast("Payment status updated successfully", "success");
+
+    const updatedOrder = currentOrdersState.orders[orderIndex];
+    if (updatedOrder) renderOrderDetails(updatedOrder);
+
+    updateOrdersContainer();
+
+  } catch (error) {
+    console.error("Payment status update error:", error);
+    showToast(error.message || "Failed to update payment status. Please try again.", "danger");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Payment Status";
+  }
 }
 
 // Fetches orders for this user from Firestore. Matches the "userId"
@@ -512,350 +634,4 @@ function renderEditUserForm(user) {
       </div>
 
       <div class="bf-field">
-        <label class="bf-label">Phone</label>
-        <input type="text" class="bf-input" id="editPhone" value="${escapeHtml(phone)}">
-      </div>
-
-      <div class="bf-field">
-        <label class="bf-label">Address</label>
-        <textarea class="bf-textarea" id="editAddress">${escapeHtml(address)}</textarea>
-      </div>
-
-      <div class="bf-field">
-        <label class="bf-label">Account Status</label>
-        <select class="bf-select" id="editStatus">
-          <option value="active" ${isActiveNow ? "selected" : ""}>Active</option>
-          <option value="inactive" ${!isActiveNow ? "selected" : ""}>Inactive</option>
-        </select>
-      </div>
-
-      <div class="bf-field">
-        <label class="bf-label">UID (read-only)</label>
-        <input type="text" class="bf-input" value="${escapeHtml(user.id)}" readonly disabled>
-      </div>
-
-      <div style="display:flex; gap:10px; margin-top:16px;">
-        <button type="submit" class="bf-btn bf-btn-primary" id="saveUserBtn">Save Changes</button>
-        <button type="button" class="bf-btn bf-btn-ghost cancel-edit-btn">Cancel</button>
-      </div>
-
-    </form>
-  `;
-}
-
-async function saveUserChanges(uid) {
-  const user = allUsers.find(u => u.id === uid);
-  if (!user) return;
-
-  const saveBtn = document.getElementById("saveUserBtn");
-  const newName = document.getElementById("editName").value.trim();
-  const newPhone = document.getElementById("editPhone").value.trim();
-  const newAddress = document.getElementById("editAddress").value.trim();
-  const isActive = document.getElementById("editStatus").value === "active";
-
-  if (!newName) {
-    showToast("Name cannot be empty", "danger");
-    return;
-  }
-
-  saveBtn.disabled = true;
-  saveBtn.textContent = "Saving...";
-
-  try {
-    const updatePayload = {
-      [getNameField(user)]: newName,
-      [getPhoneField(user)]: newPhone,
-      address: newAddress,
-      ...buildStatusUpdate(user, isActive)
-    };
-
-    await updateDoc(doc(db, "users", uid), updatePayload);
-
-    const updatedUser = { ...user, ...updatePayload };
-    const index = allUsers.findIndex(u => u.id === uid);
-    if (index !== -1) allUsers[index] = updatedUser;
-
-    showToast("User updated successfully", "success");
-    renderUserDetails(updatedUser);
-
-    // Refresh the list behind the modal, respecting any active search filter.
-    userSearch.dispatchEvent(new Event("input"));
-
-  } catch (error) {
-    console.error("Update user error:", error);
-    showToast(error.message || "Failed to update user. Please try again.", "danger");
-    saveBtn.disabled = false;
-    saveBtn.textContent = "Save Changes";
-  }
-}
-
-function renderDeleteConfirm(user) {
-  const name = user.name || user.fullName || user.displayName || "Unnamed User";
-  const email = user.email || "No email";
-
-  userDetailsContent.innerHTML = `
-    <div class="bf-state bf-state-error" style="padding:8px 0 16px;">
-      <div class="bf-state-icon">⚠️</div>
-      <p class="bf-state-title">Are you sure you want to delete this user?</p>
-      <p class="bf-state-text">
-        <strong>${escapeHtml(name)}</strong><br>
-        ${escapeHtml(email)}
-      </p>
-      <p class="bf-state-text" style="font-size:12px;">
-        This will permanently delete the Firestore user document. This action cannot be undone.
-      </p>
-    </div>
-
-    <div style="display:flex; gap:10px; flex-wrap:wrap;">
-      <button type="button" class="bf-btn bf-btn-danger bf-btn-sm confirm-delete-btn">
-        🗑️ Delete User
-      </button>
-      <button type="button" class="bf-btn bf-btn-ghost bf-btn-sm cancel-delete-btn">
-        Cancel
-      </button>
-    </div>
-  `;
-}
-
-async function deleteUser(uid) {
-  const confirmBtn = document.querySelector(".confirm-delete-btn");
-  if (confirmBtn) {
-    confirmBtn.disabled = true;
-    confirmBtn.textContent = "Deleting...";
-  }
-
-  try {
-    await deleteDoc(doc(db, "users", uid));
-
-    allUsers = allUsers.filter(u => u.id !== uid);
-    currentDetailsUserId = null;
-    currentOrdersState = { uid: null, status: "idle", orders: [] };
-
-    showToast("User deleted successfully", "success");
-    closeModal("userDetailsModal");
-
-    userCount.textContent = `Total Users: ${allUsers.length}`;
-    userSearch.dispatchEvent(new Event("input"));
-
-  } catch (error) {
-    console.error("Delete user error:", error);
-    showToast(error.message || "Failed to delete user. Please try again.", "danger");
-
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = "🗑️ Delete User";
-    }
-  }
-}
-
-usersList.addEventListener("click", async (e) => {
-  const btn = e.target.closest(".view-details-btn");
-  if (!btn) return;
-
-  const uid = btn.dataset.uid;
-  const cachedUser = allUsers.find(u => u.id === uid);
-  if (!cachedUser) return;
-
-  currentDetailsUserId = uid;
-
-  // Show cached data immediately so the modal opens without delay,
-  // then refresh with the live Firestore document underneath it.
-  renderUserDetails(cachedUser);
-  openModal("userDetailsModal");
-  loadUserOrders(uid);
-
-  try {
-    const userSnap = await getDoc(doc(db, "users", uid));
-
-    if (userSnap.exists()) {
-      const freshUser = { id: userSnap.id, ...userSnap.data() };
-
-      const index = allUsers.findIndex(u => u.id === uid);
-      if (index !== -1) allUsers[index] = freshUser;
-
-      renderUserDetails(freshUser);
-    }
-  } catch (error) {
-    console.error("User details fetch error:", error);
-    // Keep showing the already-rendered cached data — no UI break.
-  }
-});
-
-userDetailsContent.addEventListener("click", (e) => {
-  if (e.target.closest(".edit-user-btn")) {
-    const user = allUsers.find(u => u.id === currentDetailsUserId);
-    if (user) renderEditUserForm(user);
-    return;
-  }
-
-  if (e.target.closest(".cancel-edit-btn")) {
-    const user = allUsers.find(u => u.id === currentDetailsUserId);
-    if (user) renderUserDetails(user);
-    return;
-  }
-
-  if (e.target.closest(".delete-user-btn")) {
-    const user = allUsers.find(u => u.id === currentDetailsUserId);
-    if (user) renderDeleteConfirm(user);
-    return;
-  }
-
-  if (e.target.closest(".cancel-delete-btn")) {
-    const user = allUsers.find(u => u.id === currentDetailsUserId);
-    if (user) renderUserDetails(user);
-    return;
-  }
-
-  if (e.target.closest(".confirm-delete-btn")) {
-    if (currentDetailsUserId) deleteUser(currentDetailsUserId);
-    return;
-  }
-
-  const viewOrderBtn = e.target.closest(".view-order-btn");
-  if (viewOrderBtn) {
-    const orderId = viewOrderBtn.dataset.orderId;
-    const order = currentOrdersState.orders.find(o => o.id === orderId);
-    if (order) {
-      renderOrderDetails(order);
-      openModal("orderDetailsModal");
-    }
-    return;
-  }
-});
-
-userDetailsContent.addEventListener("submit", (e) => {
-  if (!e.target.closest("#editUserForm")) return;
-  e.preventDefault();
-  if (currentDetailsUserId) saveUserChanges(currentDetailsUserId);
-});
-
-userDetailsCloseBtn.addEventListener("click", () => {
-  closeModal("userDetailsModal");
-});
-
-orderDetailsCloseBtn.addEventListener("click", () => {
-  closeModal("orderDetailsModal");
-});
-
-document.addEventListener("keydown", (e) => {
-  if (e.key !== "Escape") return;
-
-  if (orderDetailsModal.classList.contains("bf-open")) {
-    closeModal("orderDetailsModal");
-    return;
-  }
-
-  if (userDetailsModal.classList.contains("bf-open")) {
-    closeModal("userDetailsModal");
-  }
-});
-
-
-/* =========================
-   SEARCH
-========================= */
-
-userSearch.addEventListener(
-  "input",
-  () => {
-
-    const search =
-      userSearch.value
-        .trim()
-        .toLowerCase();
-
-
-    if (!search) {
-
-      renderUsers(allUsers);
-      return;
-
-    }
-
-
-    const filtered =
-      allUsers.filter(user => {
-
-        const text = `
-          ${user.name || ""}
-          ${user.fullName || ""}
-          ${user.displayName || ""}
-          ${user.email || ""}
-          ${user.phone || ""}
-          ${user.mobile || ""}
-          ${user.id || ""}
-        `.toLowerCase();
-
-        return text.includes(search);
-
-      });
-
-
-    renderUsers(filtered);
-
-  }
-);
-
-
-/* =========================
-   HTML SAFETY
-========================= */
-
-function escapeHtml(value) {
-
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-
-}
-
-
-/* =========================
-   ADMIN AUTH CHECK
-========================= */
-
-onAuthStateChanged(
-  auth,
-  async user => {
-
-    if (!user) {
-
-      window.location.href =
-        "../login.html";
-
-      return;
-
-    }
-
-
-    try {
-
-      const tokenResult =
-        await user.getIdTokenResult(true);
-
-      if (tokenResult.claims.admin !== true) {
-
-        window.location.href =
-          "index.html";
-
-        return;
-
-      }
-
-
-      await loadUsers();
-
-    } catch (error) {
-
-      console.error(error);
-
-      window.location.href =
-        "index.html";
-
-    }
-
-  }
-);
+        
