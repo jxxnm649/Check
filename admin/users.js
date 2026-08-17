@@ -10,7 +10,9 @@ import {
   doc,
   getDoc,
   updateDoc,
-  deleteDoc
+  deleteDoc,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 import {
@@ -29,6 +31,7 @@ const userDetailsCloseBtn = document.getElementById("userDetailsCloseBtn");
 
 let allUsers = [];
 let currentDetailsUserId = null;
+let currentOrdersState = { uid: null, status: "idle", orders: [] };
 
 
 /* =========================
@@ -326,7 +329,101 @@ function renderUserDetails(user) {
         🗑️ Delete User
       </button>
     </div>
+
+    <div style="margin-top:24px;">
+      <h3 style="font-size:15px;margin:0 0 10px;">📦 Orders</h3>
+      <div id="userOrdersList">
+        ${renderOrdersSectionHTML(user.id)}
+      </div>
+    </div>
   `;
+}
+
+/* =========================
+   USER ORDERS SECTION
+========================= */
+
+function getOrderStatusClass(status) {
+  const s = String(status || "").toLowerCase();
+  if (s.includes("cancel")) return "bf-status-danger";
+  if (s.includes("deliver")) return "bf-status-success";
+  if (s.includes("ship") || s.includes("out for delivery")) return "bf-status-progress";
+  if (s.includes("confirm") || s.includes("pack")) return "bf-status-warning";
+  return "bf-status-pending"; // Pending / Ordered / anything else
+}
+
+function renderOrderRow(order) {
+  const shortId = String(order.id).slice(0, 8).toUpperCase();
+  const amount = order.total ?? order.totalPrice ?? "Not available";
+
+  const productName = Array.isArray(order.products) && order.products.length
+    ? order.products.map(p => p.productName || "Product").join(", ")
+    : "Not available";
+
+  const status = order.status || "Not available";
+  const date = getCreatedDate(order);
+
+  return `
+    <div class="bf-card" style="padding:14px; margin-bottom:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <span style="font-weight:700; font-size:13px;">#${escapeHtml(shortId)}</span>
+        <span class="bf-status-pill ${getOrderStatusClass(status)}">${escapeHtml(status)}</span>
+      </div>
+      <p style="margin:8px 0 4px; font-size:14px;">${escapeHtml(productName)}</p>
+      <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft, #555);">
+        <span>${amount === "Not available" ? "Not available" : "₹" + escapeHtml(String(amount))}</span>
+        <span>${escapeHtml(date)}</span>
+      </div>
+    </div>
+  `;
+}
+
+// Renders whatever the current known state is for this user's orders —
+// idle/loading placeholder, error message, empty state, or the list.
+function renderOrdersSectionHTML(uid) {
+  if (currentOrdersState.uid !== uid || currentOrdersState.status === "loading") {
+    return `<p class="bf-state-text">Loading orders...</p>`;
+  }
+
+  if (currentOrdersState.status === "error") {
+    return `<p class="bf-state-text">⚠️ Unable to load orders. Please try again.</p>`;
+  }
+
+  if (!currentOrdersState.orders.length) {
+    return `<p class="bf-state-text">No orders found</p>`;
+  }
+
+  return currentOrdersState.orders.map(renderOrderRow).join("");
+}
+
+function updateOrdersContainer() {
+  const container = document.getElementById("userOrdersList");
+  if (container) container.innerHTML = renderOrdersSectionHTML(currentDetailsUserId);
+}
+
+// Fetches orders for this user from Firestore. Matches the "userId"
+// field, which is what order documents actually use (confirmed in
+// checkout.js / orders.js / admin.js) — not "uid" or "customerId".
+async function loadUserOrders(uid) {
+  currentOrdersState = { uid, status: "loading", orders: [] };
+  updateOrdersContainer();
+
+  try {
+    const q = query(collection(db, "orders"), where("userId", "==", uid));
+    const snapshot = await getDocs(q);
+    const orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (currentDetailsUserId === uid) {
+      currentOrdersState = { uid, status: "loaded", orders };
+      updateOrdersContainer();
+    }
+  } catch (error) {
+    console.error("User orders fetch error:", error);
+    if (currentDetailsUserId === uid) {
+      currentOrdersState = { uid, status: "error", orders: [] };
+      updateOrdersContainer();
+    }
+  }
 }
 
 function renderEditUserForm(user) {
@@ -466,6 +563,7 @@ async function deleteUser(uid) {
 
     allUsers = allUsers.filter(u => u.id !== uid);
     currentDetailsUserId = null;
+    currentOrdersState = { uid: null, status: "idle", orders: [] };
 
     showToast("User deleted successfully", "success");
     closeModal("userDetailsModal");
@@ -498,6 +596,7 @@ usersList.addEventListener("click", async (e) => {
   // then refresh with the live Firestore document underneath it.
   renderUserDetails(cachedUser);
   openModal("userDetailsModal");
+  loadUserOrders(uid);
 
   try {
     const userSnap = await getDoc(doc(db, "users", uid));
@@ -604,71 +703,4 @@ userSearch.addEventListener(
       });
 
 
-    renderUsers(filtered);
-
-  }
-);
-
-
-/* =========================
-   HTML SAFETY
-========================= */
-
-function escapeHtml(value) {
-
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-
-}
-
-
-/* =========================
-   ADMIN AUTH CHECK
-========================= */
-
-onAuthStateChanged(
-  auth,
-  async user => {
-
-    if (!user) {
-
-      window.location.href =
-        "../login.html";
-
-      return;
-
-    }
-
-
-    try {
-
-      const tokenResult =
-        await user.getIdTokenResult(true);
-
-      if (tokenResult.claims.admin !== true) {
-
-        window.location.href =
-          "index.html";
-
-        return;
-
-      }
-
-
-      await loadUsers();
-
-    } catch (error) {
-
-      console.error(error);
-
-      window.location.href =
-        "index.html";
-
-    }
-
-  }
-);
+    renderUsers(
