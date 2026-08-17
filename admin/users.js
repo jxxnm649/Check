@@ -8,12 +8,14 @@ import {
   collection,
   getDocs,
   doc,
-  getDoc
+  getDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 import {
   openModal,
-  closeModal
+  closeModal,
+  showToast
 } from "../design-system.js";
 
 
@@ -25,6 +27,7 @@ const userDetailsContent = document.getElementById("userDetailsContent");
 const userDetailsCloseBtn = document.getElementById("userDetailsCloseBtn");
 
 let allUsers = [];
+let currentDetailsUserId = null;
 
 
 /* =========================
@@ -192,9 +195,35 @@ const DETAILS_HANDLED_KEYS = new Set([
   "name", "fullName", "displayName",
   "email",
   "phone", "mobile",
+  "address",
   "active", "isActive", "status", "disabled", "blocked",
   "createdAt", "created_at", "createdOn", "dateCreated"
 ]);
+
+// Existing documents use different field names for the same thing
+// (e.g. "name" vs "fullName", "phone" vs "mobile"). Editing must write
+// back to whichever field the document already uses, instead of
+// creating a duplicate new field.
+function getNameField(user) {
+  if (user.fullName !== undefined) return "fullName";
+  if (user.displayName !== undefined) return "displayName";
+  return "name";
+}
+
+function getPhoneField(user) {
+  if (user.mobile !== undefined) return "mobile";
+  return "phone";
+}
+
+// Keeps whichever status representation the document already uses
+// (boolean "active" or string "status") in sync, so getAccountStatus()
+// keeps reading it correctly after the edit.
+function buildStatusUpdate(user, isActive) {
+  if (typeof user.status === "string" && user.active === undefined) {
+    return { status: isActive ? "active" : "inactive" };
+  }
+  return { active: isActive };
+}
 
 function formatFieldLabel(key) {
   return key
@@ -262,11 +291,13 @@ function renderUserDetails(user) {
   const name = user.name || user.fullName || user.displayName || "Not available";
   const email = user.email || "Not available";
   const phone = user.phone || user.mobile || "Not available";
+  const address = user.address || "Not available";
 
   const rows = [
     detailRow("Name", name),
     detailRow("Email", email),
     detailRow("Phone", phone),
+    detailRow("Address", address),
     detailRow("UID", user.id),
     detailRow("Account status", getAccountStatus(user)),
     detailRow("User document ID", user.id),
@@ -284,7 +315,111 @@ function renderUserDetails(user) {
       rows.push(detailRow(formatFieldLabel(key), value));
     });
 
-  userDetailsContent.innerHTML = rows.join("");
+  userDetailsContent.innerHTML = `
+    ${rows.join("")}
+    <div style="margin-top:16px;">
+      <button type="button" class="bf-btn bf-btn-secondary bf-btn-sm edit-user-btn">
+        ✏️ Edit User
+      </button>
+    </div>
+  `;
+}
+
+function renderEditUserForm(user) {
+  const name = user.name || user.fullName || user.displayName || "";
+  const phone = user.phone || user.mobile || "";
+  const address = user.address || "";
+  const isActiveNow = getAccountStatus(user) !== "Inactive";
+
+  userDetailsContent.innerHTML = `
+    <form id="editUserForm">
+
+      <div class="bf-field">
+        <label class="bf-label">Name</label>
+        <input type="text" class="bf-input" id="editName" value="${escapeHtml(name)}" required>
+      </div>
+
+      <div class="bf-field">
+        <label class="bf-label">Email (read-only)</label>
+        <input type="email" class="bf-input" value="${escapeHtml(user.email || "")}" readonly disabled>
+      </div>
+
+      <div class="bf-field">
+        <label class="bf-label">Phone</label>
+        <input type="text" class="bf-input" id="editPhone" value="${escapeHtml(phone)}">
+      </div>
+
+      <div class="bf-field">
+        <label class="bf-label">Address</label>
+        <textarea class="bf-textarea" id="editAddress">${escapeHtml(address)}</textarea>
+      </div>
+
+      <div class="bf-field">
+        <label class="bf-label">Account Status</label>
+        <select class="bf-select" id="editStatus">
+          <option value="active" ${isActiveNow ? "selected" : ""}>Active</option>
+          <option value="inactive" ${!isActiveNow ? "selected" : ""}>Inactive</option>
+        </select>
+      </div>
+
+      <div class="bf-field">
+        <label class="bf-label">UID (read-only)</label>
+        <input type="text" class="bf-input" value="${escapeHtml(user.id)}" readonly disabled>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:16px;">
+        <button type="submit" class="bf-btn bf-btn-primary" id="saveUserBtn">Save Changes</button>
+        <button type="button" class="bf-btn bf-btn-ghost cancel-edit-btn">Cancel</button>
+      </div>
+
+    </form>
+  `;
+}
+
+async function saveUserChanges(uid) {
+  const user = allUsers.find(u => u.id === uid);
+  if (!user) return;
+
+  const saveBtn = document.getElementById("saveUserBtn");
+  const newName = document.getElementById("editName").value.trim();
+  const newPhone = document.getElementById("editPhone").value.trim();
+  const newAddress = document.getElementById("editAddress").value.trim();
+  const isActive = document.getElementById("editStatus").value === "active";
+
+  if (!newName) {
+    showToast("Name cannot be empty", "danger");
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    const updatePayload = {
+      [getNameField(user)]: newName,
+      [getPhoneField(user)]: newPhone,
+      address: newAddress,
+      ...buildStatusUpdate(user, isActive)
+    };
+
+    await updateDoc(doc(db, "users", uid), updatePayload);
+
+    const updatedUser = { ...user, ...updatePayload };
+    const index = allUsers.findIndex(u => u.id === uid);
+    if (index !== -1) allUsers[index] = updatedUser;
+
+    showToast("User updated successfully", "success");
+    renderUserDetails(updatedUser);
+
+    // Refresh the list behind the modal, respecting any active search filter.
+    userSearch.dispatchEvent(new Event("input"));
+
+  } catch (error) {
+    console.error("Update user error:", error);
+    showToast(error.message || "Failed to update user. Please try again.", "danger");
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Changes";
+  }
 }
 
 usersList.addEventListener("click", async (e) => {
@@ -294,6 +429,8 @@ usersList.addEventListener("click", async (e) => {
   const uid = btn.dataset.uid;
   const cachedUser = allUsers.find(u => u.id === uid);
   if (!cachedUser) return;
+
+  currentDetailsUserId = uid;
 
   // Show cached data immediately so the modal opens without delay,
   // then refresh with the live Firestore document underneath it.
@@ -315,6 +452,26 @@ usersList.addEventListener("click", async (e) => {
     console.error("User details fetch error:", error);
     // Keep showing the already-rendered cached data — no UI break.
   }
+});
+
+userDetailsContent.addEventListener("click", (e) => {
+  if (e.target.closest(".edit-user-btn")) {
+    const user = allUsers.find(u => u.id === currentDetailsUserId);
+    if (user) renderEditUserForm(user);
+    return;
+  }
+
+  if (e.target.closest(".cancel-edit-btn")) {
+    const user = allUsers.find(u => u.id === currentDetailsUserId);
+    if (user) renderUserDetails(user);
+    return;
+  }
+});
+
+userDetailsContent.addEventListener("submit", (e) => {
+  if (!e.target.closest("#editUserForm")) return;
+  e.preventDefault();
+  if (currentDetailsUserId) saveUserChanges(currentDetailsUserId);
 });
 
 userDetailsCloseBtn.addEventListener("click", () => {
@@ -436,3 +593,4 @@ onAuthStateChanged(
 
   }
 );
+            
