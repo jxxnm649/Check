@@ -9,10 +9,18 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+import {
+  openModal,
+  closeModal
+} from "../design-system.js";
+
 
 const usersList = document.getElementById("usersList");
 const userCount = document.getElementById("userCount");
 const userSearch = document.getElementById("userSearch");
+const userDetailsModal = document.getElementById("userDetailsModal");
+const userDetailsContent = document.getElementById("userDetailsContent");
+const userDetailsCloseBtn = document.getElementById("userDetailsCloseBtn");
 
 let allUsers = [];
 
@@ -154,6 +162,15 @@ function renderUsers(users) {
 
         </div>
 
+        <div style="margin-top:14px;">
+          <button
+            type="button"
+            class="bf-btn bf-btn-ghost bf-btn-sm view-details-btn"
+            data-uid="${escapeHtml(user.id)}">
+            View Details
+          </button>
+        </div>
+
       </div>
 
     `;
@@ -161,6 +178,124 @@ function renderUsers(users) {
   }).join("");
 
 }
+
+
+/* =========================
+   USER DETAILS MODAL
+========================= */
+
+// Field keys already shown as dedicated rows in the modal —
+// excluded from the generic "other fields" list so nothing repeats.
+const DETAILS_HANDLED_KEYS = new Set([
+  "name", "fullName", "displayName",
+  "email",
+  "phone", "mobile",
+  "active", "isActive", "status", "disabled", "blocked",
+  "createdAt", "created_at", "createdOn", "dateCreated"
+]);
+
+function formatFieldLabel(key) {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/_/g, " ")
+    .replace(/^./, s => s.toUpperCase());
+}
+
+function formatDateValue(value) {
+  // Firestore Timestamp objects expose toDate()
+  if (value && typeof value.toDate === "function") {
+    return value.toDate().toLocaleString();
+  }
+  if (value instanceof Date) {
+    return value.toLocaleString();
+  }
+  return String(value);
+}
+
+function getAccountStatus(user) {
+  if (typeof user.active === "boolean") return user.active ? "Active" : "Inactive";
+  if (typeof user.isActive === "boolean") return user.isActive ? "Active" : "Inactive";
+  if (typeof user.disabled === "boolean") return user.disabled ? "Disabled" : "Active";
+  if (typeof user.blocked === "boolean") return user.blocked ? "Blocked" : "Active";
+  if (user.status) return String(user.status);
+  return "Not available";
+}
+
+function getCreatedDate(user) {
+  const value = user.createdAt || user.created_at || user.createdOn || user.dateCreated;
+  if (!value) return "Not available";
+  try {
+    return formatDateValue(value);
+  } catch {
+    return "Not available";
+  }
+}
+
+function detailRow(label, value) {
+  return `
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      padding:10px 0;
+      border-bottom:1px solid var(--line, #eee);
+    ">
+      <span style="font-weight:600;color:var(--ink-soft, #555);">${escapeHtml(label)}</span>
+      <span style="text-align:right;word-break:break-word;">${escapeHtml(value)}</span>
+    </div>
+  `;
+}
+
+function renderUserDetails(user) {
+  const name = user.name || user.fullName || user.displayName || "Not available";
+  const email = user.email || "Not available";
+  const phone = user.phone || user.mobile || "Not available";
+
+  const rows = [
+    detailRow("Name", name),
+    detailRow("Email", email),
+    detailRow("Phone", phone),
+    detailRow("UID", user.id),
+    detailRow("Account status", getAccountStatus(user)),
+    detailRow("User document ID", user.id),
+    detailRow("Created date", getCreatedDate(user)),
+  ];
+
+  // Any other existing Firestore fields not already shown above.
+  Object.keys(user)
+    .filter(key => key !== "id" && !DETAILS_HANDLED_KEYS.has(key))
+    .forEach(key => {
+      const raw = user[key];
+      const value = (raw === null || raw === undefined || raw === "")
+        ? "Not available"
+        : (typeof raw === "object" ? JSON.stringify(raw) : String(raw));
+      rows.push(detailRow(formatFieldLabel(key), value));
+    });
+
+  userDetailsContent.innerHTML = rows.join("");
+}
+
+usersList.addEventListener("click", (e) => {
+  const btn = e.target.closest(".view-details-btn");
+  if (!btn) return;
+
+  const uid = btn.dataset.uid;
+  const user = allUsers.find(u => u.id === uid);
+  if (!user) return;
+
+  renderUserDetails(user);
+  openModal("userDetailsModal");
+});
+
+userDetailsCloseBtn.addEventListener("click", () => {
+  closeModal("userDetailsModal");
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && userDetailsModal.classList.contains("bf-open")) {
+    closeModal("userDetailsModal");
+  }
+});
 
 
 /* =========================
