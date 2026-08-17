@@ -28,6 +28,9 @@ const userSearch = document.getElementById("userSearch");
 const userDetailsModal = document.getElementById("userDetailsModal");
 const userDetailsContent = document.getElementById("userDetailsContent");
 const userDetailsCloseBtn = document.getElementById("userDetailsCloseBtn");
+const orderDetailsModal = document.getElementById("orderDetailsModal");
+const orderDetailsContent = document.getElementById("orderDetailsContent");
+const orderDetailsCloseBtn = document.getElementById("orderDetailsCloseBtn");
 
 let allUsers = [];
 let currentDetailsUserId = null;
@@ -374,6 +377,14 @@ function renderOrderRow(order) {
         <span>${amount === "Not available" ? "Not available" : "₹" + escapeHtml(String(amount))}</span>
         <span>${escapeHtml(date)}</span>
       </div>
+      <div style="margin-top:10px;">
+        <button
+          type="button"
+          class="bf-btn bf-btn-ghost bf-btn-sm view-order-btn"
+          data-order-id="${escapeHtml(order.id)}">
+          View Order
+        </button>
+      </div>
     </div>
   `;
 }
@@ -399,6 +410,61 @@ function renderOrdersSectionHTML(uid) {
 function updateOrdersContainer() {
   const container = document.getElementById("userOrdersList");
   if (container) container.innerHTML = renderOrdersSectionHTML(currentDetailsUserId);
+}
+
+// Fields already shown as dedicated rows below — everything else on
+// the order document is auto-listed so nothing genuinely present
+// gets hidden, without inventing rows for fields that don't exist.
+const ORDER_HANDLED_KEYS = new Set([
+  "userId", "mobile", "phone", "address", "products",
+  "total", "totalPrice", "status",
+  "createdAt", "updatedAt", "modifiedAt", "cancelledAt"
+]);
+
+function renderOrderDetails(order) {
+  const rows = [
+    detailRow("Order ID", order.id),
+    detailRow("Customer/User ID", order.userId || "Not available"),
+  ];
+
+  if (Array.isArray(order.products) && order.products.length) {
+    order.products.forEach((product, index) => {
+      const suffix = order.products.length > 1 ? ` (Item ${index + 1})` : "";
+      rows.push(detailRow(`Product name${suffix}`, product.productName || "Not available"));
+      rows.push(detailRow(`Quantity${suffix}`, product.qty !== undefined ? String(product.qty) : "Not available"));
+      rows.push(detailRow(`Price${suffix}`, product.price !== undefined ? `₹${product.price}` : "Not available"));
+    });
+  } else {
+    rows.push(detailRow("Product name", "Not available"));
+    rows.push(detailRow("Quantity", "Not available"));
+    rows.push(detailRow("Price", "Not available"));
+  }
+
+  const total = order.total ?? order.totalPrice;
+  rows.push(detailRow("Total amount", total !== undefined ? `₹${total}` : "Not available"));
+  rows.push(detailRow("Order status", order.status || "Not available"));
+  rows.push(detailRow("Payment status", "Not available")); // no such field exists on order documents
+  rows.push(detailRow("Delivery address", order.address || "Not available"));
+  rows.push(detailRow("Phone", order.mobile || order.phone || "Not available"));
+  rows.push(detailRow("Created date", getCreatedDate(order)));
+
+  const updatedValue = order.updatedAt || order.modifiedAt || order.cancelledAt;
+  rows.push(detailRow("Updated date", updatedValue ? formatDateValue(updatedValue) : "Not available"));
+
+  // Any other existing fields on this order document (e.g. paymentMethod, paymentId, customerName).
+  Object.keys(order)
+    .filter(key => key !== "id" && !ORDER_HANDLED_KEYS.has(key))
+    .forEach(key => {
+      const raw = order[key];
+      let value;
+      if (raw === null || raw === undefined || raw === "") value = "Not available";
+      else if (raw && typeof raw.toDate === "function") value = formatDateValue(raw);
+      else if (typeof raw === "object") value = JSON.stringify(raw);
+      else value = String(raw);
+      rows.push(detailRow(formatFieldLabel(key), value));
+    });
+
+  orderDetailsContent.innerHTML = rows.join("");
 }
 
 // Fetches orders for this user from Firestore. Matches the "userId"
@@ -644,6 +710,17 @@ userDetailsContent.addEventListener("click", (e) => {
     if (currentDetailsUserId) deleteUser(currentDetailsUserId);
     return;
   }
+
+  const viewOrderBtn = e.target.closest(".view-order-btn");
+  if (viewOrderBtn) {
+    const orderId = viewOrderBtn.dataset.orderId;
+    const order = currentOrdersState.orders.find(o => o.id === orderId);
+    if (order) {
+      renderOrderDetails(order);
+      openModal("orderDetailsModal");
+    }
+    return;
+  }
 });
 
 userDetailsContent.addEventListener("submit", (e) => {
@@ -656,8 +733,19 @@ userDetailsCloseBtn.addEventListener("click", () => {
   closeModal("userDetailsModal");
 });
 
+orderDetailsCloseBtn.addEventListener("click", () => {
+  closeModal("orderDetailsModal");
+});
+
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && userDetailsModal.classList.contains("bf-open")) {
+  if (e.key !== "Escape") return;
+
+  if (orderDetailsModal.classList.contains("bf-open")) {
+    closeModal("orderDetailsModal");
+    return;
+  }
+
+  if (userDetailsModal.classList.contains("bf-open")) {
     closeModal("userDetailsModal");
   }
 });
@@ -703,4 +791,71 @@ userSearch.addEventListener(
       });
 
 
-    renderUsers(
+    renderUsers(filtered);
+
+  }
+);
+
+
+/* =========================
+   HTML SAFETY
+========================= */
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+/* =========================
+   ADMIN AUTH CHECK
+========================= */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    if (!user) {
+
+      window.location.href =
+        "../login.html";
+
+      return;
+
+    }
+
+
+    try {
+
+      const tokenResult =
+        await user.getIdTokenResult(true);
+
+      if (tokenResult.claims.admin !== true) {
+
+        window.location.href =
+          "index.html";
+
+        return;
+
+      }
+
+
+      await loadUsers();
+
+    } catch (error) {
+
+      console.error(error);
+
+      window.location.href =
+        "index.html";
+
+    }
+
+  }
+);
