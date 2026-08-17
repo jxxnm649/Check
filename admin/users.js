@@ -6,7 +6,9 @@ import {
 
 import {
   collection,
-  getDocs
+  getDocs,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 import {
@@ -213,11 +215,21 @@ function formatDateValue(value) {
 }
 
 function getAccountStatus(user) {
-  if (typeof user.active === "boolean") return user.active ? "Active" : "Inactive";
+  if (typeof user.active === "boolean") {
+    return user.active ? "Active" : "Inactive";
+  }
+
+  if (typeof user.status === "string" && user.status.trim() !== "") {
+    const normalized = user.status.trim().toLowerCase();
+    if (normalized === "active") return "Active";
+    if (normalized === "inactive") return "Inactive";
+    return user.status; // some other explicit status value — show as-is
+  }
+
   if (typeof user.isActive === "boolean") return user.isActive ? "Active" : "Inactive";
   if (typeof user.disabled === "boolean") return user.disabled ? "Disabled" : "Active";
   if (typeof user.blocked === "boolean") return user.blocked ? "Blocked" : "Active";
-  if (user.status) return String(user.status);
+
   return "Not available";
 }
 
@@ -275,16 +287,34 @@ function renderUserDetails(user) {
   userDetailsContent.innerHTML = rows.join("");
 }
 
-usersList.addEventListener("click", (e) => {
+usersList.addEventListener("click", async (e) => {
   const btn = e.target.closest(".view-details-btn");
   if (!btn) return;
 
   const uid = btn.dataset.uid;
-  const user = allUsers.find(u => u.id === uid);
-  if (!user) return;
+  const cachedUser = allUsers.find(u => u.id === uid);
+  if (!cachedUser) return;
 
-  renderUserDetails(user);
+  // Show cached data immediately so the modal opens without delay,
+  // then refresh with the live Firestore document underneath it.
+  renderUserDetails(cachedUser);
   openModal("userDetailsModal");
+
+  try {
+    const userSnap = await getDoc(doc(db, "users", uid));
+
+    if (userSnap.exists()) {
+      const freshUser = { id: userSnap.id, ...userSnap.data() };
+
+      const index = allUsers.findIndex(u => u.id === uid);
+      if (index !== -1) allUsers[index] = freshUser;
+
+      renderUserDetails(freshUser);
+    }
+  } catch (error) {
+    console.error("User details fetch error:", error);
+    // Keep showing the already-rendered cached data — no UI break.
+  }
 });
 
 userDetailsCloseBtn.addEventListener("click", () => {
