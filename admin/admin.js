@@ -18,65 +18,211 @@ import {
 import { showToast } from "../design-system.js";
 
 
-/* ---------- Element refs ---------- */
+/* ============================================================
+   ELEMENT REFS
+   ============================================================ */
 
-const initialLoadingState = document.getElementById("initialLoadingState");
-const authRequiredState   = document.getElementById("authRequiredState");
-const accessDeniedState   = document.getElementById("accessDeniedState");
-const errorState          = document.getElementById("errorState");
-const errorStateText      = document.getElementById("errorStateText");
-const errorRetryBtn       = document.getElementById("errorRetryBtn");
+const initialLoadingState =
+  document.getElementById("initialLoadingState");
 
-const adminShell = document.getElementById("adminShell");
-const adminNav   = document.getElementById("adminNav");
+const authRequiredState =
+  document.getElementById("authRequiredState");
 
-const userName  = document.getElementById("userName");
-const userEmail = document.getElementById("userEmail");
-const userAvatar = document.getElementById("userAvatar");
+const accessDeniedState =
+  document.getElementById("accessDeniedState");
 
-const hamburgerBtn  = document.getElementById("hamburgerBtn");
-const drawerOverlay = document.getElementById("drawerOverlay");
+const errorState =
+  document.getElementById("errorState");
 
-const profileBtn = document.getElementById("profileBtn");
-const profileMenu = document.getElementById("profileMenu");
+const errorStateText =
+  document.getElementById("errorStateText");
 
-const logoutBtn = document.getElementById("logoutBtn");
+const errorRetryBtn =
+  document.getElementById("errorRetryBtn");
+
+const adminShell =
+  document.getElementById("adminShell");
+
+const adminNav =
+  document.getElementById("adminNav");
+
+const userName =
+  document.getElementById("userName");
+
+const userEmail =
+  document.getElementById("userEmail");
+
+const userAvatar =
+  document.getElementById("userAvatar");
+
+const hamburgerBtn =
+  document.getElementById("hamburgerBtn");
+
+const drawerOverlay =
+  document.getElementById("drawerOverlay");
+
+const profileBtn =
+  document.getElementById("profileBtn");
+
+const profileMenu =
+  document.getElementById("profileMenu");
+
+const logoutBtn =
+  document.getElementById("logoutBtn");
 
 
-/* ---------- Dashboard metric refs ---------- */
+/* ============================================================
+   DASHBOARD REFS
+   ============================================================ */
 
-const usersCount = document.getElementById("usersCount");
-const vendorsCount = document.getElementById("vendorsCount");
-const ordersCount = document.getElementById("ordersCount");
-const revenueTotal = document.getElementById("revenueTotal");
+const usersCount =
+  document.getElementById("usersCount");
+
+const vendorsCount =
+  document.getElementById("vendorsCount");
+
+const ordersCount =
+  document.getElementById("ordersCount");
+
+const revenueTotal =
+  document.getElementById("revenueTotal");
 
 
-/* ---------- Navigation ---------- */
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
 
 const NAV_ITEMS = [
-  { id: "dashboard", label: "Dashboard", icon: "📊", permission: null, active: true },
-  { id: "users", label: "Users", icon: "👥", permission: "users" },
-  { id: "vendors", label: "Vendors", icon: "🏬", permission: "vendors" },
-  { id: "products", label: "Products", icon: "📦", permission: "products" },
-  { id: "orders", label: "Orders", icon: "🧾", permission: "orders" },
-  { id: "payments", label: "Payments", icon: "💳", permission: "payments" },
-  { id: "refunds", label: "Refunds", icon: "↩️", permission: "refunds" },
-  { id: "wallets", label: "Wallets", icon: "👛", permission: "wallets" },
-  { id: "commissions", label: "Commissions", icon: "🧮", permission: "commissions" },
-  { id: "cashback", label: "Cashback", icon: "💸", permission: "cashback" },
-  { id: "referrals", label: "Referrals", icon: "🔗", permission: "referrals" },
-  { id: "repairs", label: "Repairs", icon: "🔧", permission: "repairs" },
-  { id: "chats", label: "Chats", icon: "💬", permission: "chats" },
-  { id: "notifications", label: "Notifications", icon: "🔔", permission: "notifications" },
-  { id: "reports", label: "Reports", icon: "📈", permission: "reports" },
-  { id: "audit-log", label: "Audit Log", icon: "🗂️", permission: "auditLog" },
-  { id: "settings", label: "Settings", icon: "⚙️", permission: "settings" }
+
+  {
+    id: "dashboard",
+    label: "Dashboard",
+    icon: "📊",
+    permission: null,
+    active: true
+  },
+
+  {
+    id: "users",
+    label: "Users",
+    icon: "👥",
+    permission: "users"
+  },
+
+  {
+    id: "vendors",
+    label: "Vendors",
+    icon: "🏬",
+    permission: "vendors"
+  },
+
+  {
+    id: "products",
+    label: "Products",
+    icon: "📦",
+    permission: "products"
+  },
+
+  {
+    id: "orders",
+    label: "Orders",
+    icon: "🧾",
+    permission: "orders"
+  },
+
+  {
+    id: "payments",
+    label: "Payments",
+    icon: "💳",
+    permission: "payments"
+  },
+
+  {
+    id: "refunds",
+    label: "Refunds",
+    icon: "↩️",
+    permission: "refunds"
+  },
+
+  {
+    id: "wallets",
+    label: "Wallets",
+    icon: "👛",
+    permission: "wallets"
+  },
+
+  {
+    id: "commissions",
+    label: "Commissions",
+    icon: "🧮",
+    permission: "commissions"
+  },
+
+  {
+    id: "cashback",
+    label: "Cashback",
+    icon: "💸",
+    permission: "cashback"
+  },
+
+  {
+    id: "referrals",
+    label: "Referrals",
+    icon: "🔗",
+    permission: "referrals"
+  },
+
+  {
+    id: "repairs",
+    label: "Repairs",
+    icon: "🔧",
+    permission: "repairs"
+  },
+
+  {
+    id: "chats",
+    label: "Chats",
+    icon: "💬",
+    permission: "chats"
+  },
+
+  {
+    id: "notifications",
+    label: "Notifications",
+    icon: "🔔",
+    permission: "notifications"
+  },
+
+  {
+    id: "reports",
+    label: "Reports",
+    icon: "📈",
+    permission: "reports"
+  },
+
+  {
+    id: "audit-log",
+    label: "Audit Log",
+    icon: "🗂️",
+    permission: "auditLog"
+  },
+
+  {
+    id: "settings",
+    label: "Settings",
+    icon: "⚙️",
+    permission: "settings"
+  }
+
 ];
 
 
-/* ---------- State helpers ---------- */
+/* ============================================================
+   STATE HELPERS
+   ============================================================ */
 
 function hideAllStates() {
+
   [
     initialLoadingState,
     authRequiredState,
@@ -84,40 +230,66 @@ function hideAllStates() {
     errorState,
     adminShell
   ].forEach(el => {
-    if (el) el.classList.add("bf-hidden");
+
+    if (el) {
+      el.classList.add("bf-hidden");
+    }
+
   });
+
 }
 
 
 function showAuthRequired() {
+
   hideAllStates();
-  authRequiredState.classList.remove("bf-hidden");
+
+  authRequiredState.classList.remove(
+    "bf-hidden"
+  );
+
 }
 
 
 function showAccessDenied() {
+
   hideAllStates();
-  accessDeniedState.classList.remove("bf-hidden");
+
+  accessDeniedState.classList.remove(
+    "bf-hidden"
+  );
+
 }
 
 
 function showError(message) {
+
   hideAllStates();
 
   errorStateText.textContent =
     message || "Please try again.";
 
-  errorState.classList.remove("bf-hidden");
+  errorState.classList.remove(
+    "bf-hidden"
+  );
+
 }
 
 
 function showShell() {
+
   hideAllStates();
-  adminShell.classList.remove("bf-hidden");
+
+  adminShell.classList.remove(
+    "bf-hidden"
+  );
+
 }
 
 
-/* ---------- Navigation rendering ---------- */
+/* ============================================================
+   RENDER NAVIGATION
+   ============================================================ */
 
 function renderNav(claims) {
 
@@ -126,46 +298,58 @@ function renderNav(claims) {
     claims.permissions &&
     typeof claims.permissions === "object";
 
-  adminNav.innerHTML = NAV_ITEMS.map(item => {
 
-    const allowed =
-      item.permission === null
-        ? true
-        : hasGranularPermissions
-          ? claims.permissions[item.permission] === true
-          : true;
+  adminNav.innerHTML =
+    NAV_ITEMS.map(item => {
 
-    if (!allowed) return "";
+      const allowed =
+        item.permission === null
+          ? true
+          : hasGranularPermissions
+            ? claims.permissions[item.permission] === true
+            : true;
 
-    const activeClass =
-      item.active
-        ? "bf-admin-nav-active"
-        : "";
 
-    return `
-      <button
-        type="button"
-        class="bf-admin-nav-item ${activeClass}"
-        data-nav="${item.id}">
+      if (!allowed) {
+        return "";
+      }
 
-        <span class="bf-admin-nav-icon">
-          ${item.icon}
-        </span>
 
-        <span>
-          ${item.label}
-        </span>
+      const activeClass =
+        item.active
+          ? "bf-admin-nav-active"
+          : "";
 
-        ${
-          item.active
-            ? ""
-            : `<span class="bf-admin-nav-soon">Soon</span>`
-        }
 
-      </button>
-    `;
+      return `
 
-  }).join("");
+        <button
+          type="button"
+          class="bf-admin-nav-item ${activeClass}"
+          data-nav="${item.id}">
+
+          <span class="bf-admin-nav-icon">
+            ${item.icon}
+          </span>
+
+          <span>
+            ${item.label}
+          </span>
+
+          ${
+            item.active
+              ? ""
+              : `<span class="bf-admin-nav-soon">
+                   Soon
+                 </span>`
+          }
+
+        </button>
+
+      `;
+
+    }).join("");
+
 }
 
 
@@ -180,7 +364,10 @@ async function loadDashboardMetrics() {
     /* ---------- USERS ---------- */
 
     const usersSnapshot =
-      await getDocs(collection(db, "users"));
+      await getDocs(
+        collection(db, "users")
+      );
+
 
     usersCount.textContent =
       usersSnapshot.size;
@@ -189,7 +376,10 @@ async function loadDashboardMetrics() {
     /* ---------- ORDERS ---------- */
 
     const ordersSnapshot =
-      await getDocs(collection(db, "orders"));
+      await getDocs(
+        collection(db, "orders")
+      );
+
 
     ordersCount.textContent =
       ordersSnapshot.size;
@@ -198,73 +388,78 @@ async function loadDashboardMetrics() {
     /* ---------- VENDORS ---------- */
 
     /*
-      Currently there is no "vendors" collection
-      in your Firestore database.
+      Currently there is no vendors
+      collection in Firestore.
     */
 
-    vendorsCount.textContent = "0";
+    vendorsCount.textContent =
+      "0";
 
 
     /* ---------- REVENUE ---------- */
 
     let revenue = 0;
 
+
     ordersSnapshot.forEach(orderDoc => {
 
-      const orderData = orderDoc.data();
-
-      /*
-        Your order structure:
-
-        products: [
-          {
-            price: "string"
-          }
-        ]
-
-        status: "Delivered"
-      */
-
-      if (
-        String(orderData.status || "")
-          .toLowerCase() === "delivered"
-      ) {
-
-        const products =
-          Array.isArray(orderData.products)
-            ? orderData.products
-            : [];
+      const orderData =
+        orderDoc.data();
 
 
-        products.forEach(product => {
+      const status =
+        String(
+          orderData.status || ""
+        ).toLowerCase();
 
-          const price =
-            Number(
-              String(product.price || "0")
-                .replace(/[₹,\s]/g, "")
-            );
 
-          if (!Number.isNaN(price)) {
-            revenue += price;
-          }
-
-        });
-
+      if (status !== "delivered") {
+        return;
       }
+
+
+      const products =
+        Array.isArray(orderData.products)
+          ? orderData.products
+          : [];
+
+
+      products.forEach(product => {
+
+        const price =
+          Number(
+            String(
+              product.price || "0"
+            )
+            .replace(/[₹,\s]/g, "")
+          );
+
+
+        if (!Number.isNaN(price)) {
+
+          revenue += price;
+
+        }
+
+      });
 
     });
 
 
     revenueTotal.textContent =
-      "₹" + revenue.toLocaleString("en-IN");
+      "₹" +
+      revenue.toLocaleString("en-IN");
 
 
-    console.log("Dashboard loaded:", {
-      users: usersSnapshot.size,
-      vendors: 0,
-      orders: ordersSnapshot.size,
-      revenue: revenue
-    });
+    console.log(
+      "Dashboard loaded:",
+      {
+        users: usersSnapshot.size,
+        vendors: 0,
+        orders: ordersSnapshot.size,
+        revenue: revenue
+      }
+    );
 
 
   } catch (error) {
@@ -274,10 +469,23 @@ async function loadDashboardMetrics() {
       error
     );
 
-    usersCount.textContent = "—";
-    vendorsCount.textContent = "—";
-    ordersCount.textContent = "—";
-    revenueTotal.textContent = "—";
+
+    if (usersCount) {
+      usersCount.textContent = "—";
+    }
+
+    if (vendorsCount) {
+      vendorsCount.textContent = "—";
+    }
+
+    if (ordersCount) {
+      ordersCount.textContent = "—";
+    }
+
+    if (revenueTotal) {
+      revenueTotal.textContent = "—";
+    }
+
 
     showToast(
       "Unable to load dashboard data",
@@ -289,7 +497,9 @@ async function loadDashboardMetrics() {
 }
 
 
-/* ---------- Drawer ---------- */
+/* ============================================================
+   DRAWER
+   ============================================================ */
 
 function openDrawer() {
 
@@ -301,6 +511,7 @@ function openDrawer() {
     "aria-expanded",
     "true"
   );
+
 }
 
 
@@ -314,6 +525,7 @@ function closeDrawer() {
     "aria-expanded",
     "false"
   );
+
 }
 
 
@@ -326,10 +538,15 @@ hamburgerBtn.addEventListener(
         "bf-admin-drawer-open"
       );
 
+
     if (isOpen) {
+
       closeDrawer();
+
     } else {
+
       openDrawer();
+
     }
 
   }
@@ -354,23 +571,28 @@ window.addEventListener(
 );
 
 
-/* ---------- Profile menu ---------- */
+/* ============================================================
+   PROFILE MENU
+   ============================================================ */
 
 profileBtn.addEventListener(
   "click",
-  (e) => {
+  e => {
 
     e.stopPropagation();
+
 
     const isOpen =
       !profileMenu.classList.contains(
         "bf-hidden"
       );
 
+
     profileMenu.classList.toggle(
       "bf-hidden",
       isOpen
     );
+
 
     profileBtn.setAttribute(
       "aria-expanded",
@@ -383,7 +605,7 @@ profileBtn.addEventListener(
 
 document.addEventListener(
   "click",
-  (e) => {
+  e => {
 
     if (
       !profileMenu.contains(e.target) &&
@@ -405,7 +627,9 @@ document.addEventListener(
 );
 
 
-/* ---------- Logout ---------- */
+/* ============================================================
+   LOGOUT
+   ============================================================ */
 
 logoutBtn.addEventListener(
   "click",
@@ -413,24 +637,30 @@ logoutBtn.addEventListener(
 
     logoutBtn.disabled = true;
 
+
     try {
 
       await signOut(auth);
+
 
       showToast(
         "Logged out successfully",
         "success"
       );
 
+
       window.location.href =
         "../login.html";
+
 
     } catch (error) {
 
       logoutBtn.disabled = false;
 
+
       showToast(
-        error.message || "Logout failed",
+        error.message ||
+        "Logout failed",
         "danger"
       );
 
@@ -440,32 +670,180 @@ logoutBtn.addEventListener(
 );
 
 
-/* ---------- Navigation ---------- */
+/* ============================================================
+   NAVIGATION CLICK
+   ============================================================ */
+
 adminNav.addEventListener(
   "click",
-  (e) => {
+  e => {
 
     const btn =
-      e.target.closest(".bf-admin-nav-item");
+      e.target.closest(
+        ".bf-admin-nav-item"
+      );
 
-    if (!btn) return;
 
-    const navId = btn.dataset.nav;
-
-    // Users
-    if (navId === "users") {
-      window.location.href = "users.html";
+    if (!btn) {
       return;
     }
 
-    // Other sections
-    if (navId !== "dashboard") {
-      showToast(
-        "This section is coming soon",
-        "info"
-      );
+
+    const navId =
+      btn.dataset.nav;
+
+
+    /* ---------- USERS ---------- */
+
+    if (navId === "users") {
+
+      window.location.href =
+        "users.html";
+
+      return;
+
     }
 
+
+    /* ---------- DASHBOARD ---------- */
+
+    if (navId === "dashboard") {
+
+      closeDrawer();
+
+      return;
+
+    }
+
+
+    /* ---------- OTHER SECTIONS ---------- */
+
+    showToast(
+      "This section is coming soon",
+      "info"
+    );
+
+
     closeDrawer();
+
+  }
+);
+
+
+/* ============================================================
+   RETRY
+   ============================================================ */
+
+errorRetryBtn.addEventListener(
+  "click",
+  () => {
+
+    window.location.reload();
+
+  }
+);
+
+
+/* ============================================================
+   AUTH GUARD
+   ============================================================ */
+
+onAuthStateChanged(
+  auth,
+  async user => {
+
+    /* ---------- NOT LOGGED IN ---------- */
+
+    if (!user) {
+
+      showAuthRequired();
+
+      return;
+
+    }
+
+
+    try {
+
+      /*
+        Force refresh to get latest
+        Firebase custom claims.
+      */
+
+      const tokenResult =
+        await user.getIdTokenResult(
+          true
+        );
+
+
+      const claims =
+        tokenResult.claims || {};
+
+
+      /* ---------- ADMIN CHECK ---------- */
+
+      if (claims.admin !== true) {
+
+        showAccessDenied();
+
+        return;
+
+      }
+
+
+      /* ---------- USER INFO ---------- */
+
+      const displayName =
+        user.displayName ||
+        (
+          user.email
+            ? user.email.split("@")[0]
+            : "Admin"
+        );
+
+
+      userName.textContent =
+        displayName;
+
+
+      userEmail.textContent =
+        user.email || "";
+
+
+      userAvatar.textContent =
+        displayName
+          .charAt(0)
+          .toUpperCase();
+
+
+      /* ---------- NAVIGATION ---------- */
+
+      renderNav(claims);
+
+
+      /* ---------- SHOW ADMIN ---------- */
+
+      showShell();
+
+
+      /* ---------- LOAD DATA ---------- */
+
+      await loadDashboardMetrics();
+
+
+    } catch (error) {
+
+      console.error(
+        "Admin verification error:",
+        error
+      );
+
+
+      showError(
+        "We couldn't verify your admin access. Please try again."
+      );
+
+    }
+
   }
 );
