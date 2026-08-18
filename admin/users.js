@@ -195,11 +195,9 @@ function renderUsers(users) {
 
 
 /* =========================
-   USER DETAILS MODAL
+   USER DETAILS MODAL & HELPERS
 ========================= */
 
-// Field keys already shown as dedicated rows in the modal —
-// excluded from the generic "other fields" list so nothing repeats.
 const DETAILS_HANDLED_KEYS = new Set([
   "name", "fullName", "displayName",
   "email",
@@ -209,29 +207,11 @@ const DETAILS_HANDLED_KEYS = new Set([
   "createdAt", "created_at", "createdOn", "dateCreated"
 ]);
 
-// Existing documents use different field names for the same thing
-// (e.g. "name" vs "fullName", "phone" vs "mobile"). Editing must write
-// back to whichever field the document already uses, instead of
-// creating a duplicate new field.
-function getNameField(user) {
-  if (user.fullName !== undefined) return "fullName";
-  if (user.displayName !== undefined) return "displayName";
-  return "name";
-}
-
-function getPhoneField(user) {
-  if (user.mobile !== undefined) return "mobile";
-  return "phone";
-}
-
-// Keeps whichever status representation the document already uses
-// (boolean "active" or string "status") in sync, so getAccountStatus()
-// keeps reading it correctly after the edit.
-function buildStatusUpdate(user, isActive) {
-  if (typeof user.status === "string" && user.active === undefined) {
-    return { status: isActive ? "active" : "inactive" };
-  }
-  return { active: isActive };
+function escapeHtml(str) {
+  if (typeof str !== "string") return str;
+  return str.replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[m]);
 }
 
 function formatFieldLabel(key) {
@@ -242,7 +222,6 @@ function formatFieldLabel(key) {
 }
 
 function formatDateValue(value) {
-  // Firestore Timestamp objects expose toDate()
   if (value && typeof value.toDate === "function") {
     return value.toDate().toLocaleString();
   }
@@ -253,22 +232,10 @@ function formatDateValue(value) {
 }
 
 function getAccountStatus(user) {
-  if (typeof user.active === "boolean") {
-    return user.active ? "Active" : "Inactive";
-  }
-
-  if (typeof user.status === "string" && user.status.trim() !== "") {
-    const normalized = user.status.trim().toLowerCase();
-    if (normalized === "active") return "Active";
-    if (normalized === "inactive") return "Inactive";
-    return user.status; // some other explicit status value — show as-is
-  }
-
+  if (typeof user.active === "boolean") return user.active ? "Active" : "Inactive";
+  if (typeof user.status === "string" && user.status.trim() !== "") return user.status;
   if (typeof user.isActive === "boolean") return user.isActive ? "Active" : "Inactive";
-  if (typeof user.disabled === "boolean") return user.disabled ? "Disabled" : "Active";
-  if (typeof user.blocked === "boolean") return user.blocked ? "Blocked" : "Active";
-
-  return "Not available";
+  return "Active";
 }
 
 function getCreatedDate(user) {
@@ -309,11 +276,9 @@ function renderUserDetails(user) {
     detailRow("Address", address),
     detailRow("UID", user.id),
     detailRow("Account status", getAccountStatus(user)),
-    detailRow("User document ID", user.id),
     detailRow("Created date", getCreatedDate(user)),
   ];
 
-  // Any other existing Firestore fields not already shown above.
   Object.keys(user)
     .filter(key => key !== "id" && !DETAILS_HANDLED_KEYS.has(key))
     .forEach(key => {
@@ -326,15 +291,7 @@ function renderUserDetails(user) {
 
   userDetailsContent.innerHTML = `
     ${rows.join("")}
-    <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
-      <button type="button" class="bf-btn bf-btn-secondary bf-btn-sm edit-user-btn">
-        ✏️ Edit User
-      </button>
-      <button type="button" class="bf-btn bf-btn-danger bf-btn-sm delete-user-btn">
-        🗑️ Delete User
-      </button>
-    </div>
-
+    
     <div style="margin-top:24px;">
       <h3 style="font-size:15px;margin:0 0 10px;">📦 Orders</h3>
 
@@ -362,9 +319,35 @@ function renderUserDetails(user) {
   `;
 }
 
+
 /* =========================
-   USER ORDERS SECTION
+   USER ORDERS LOGIC
 ========================= */
+
+const ORDER_STATUS_OPTIONS = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled"];
+const PAYMENT_STATUS_OPTIONS = ["Pending", "Paid", "Failed", "Refunded"];
+
+async function loadUserOrders(uid) {
+  currentOrdersState = { uid, status: "loading", orders: [] };
+  updateOrdersContainer();
+
+  try {
+    const q = query(collection(db, "orders"), where("userId", "==", uid));
+    const snapshot = await getDocs(q);
+
+    const orders = [];
+    snapshot.forEach(doc => {
+      orders.push({ id: doc.id, ...doc.data() });
+    });
+
+    currentOrdersState = { uid, status: "success", orders };
+    updateOrdersContainer();
+  } catch (error) {
+    console.error("Orders load error:", error);
+    currentOrdersState = { uid, status: "error", orders: [] };
+    updateOrdersContainer();
+  }
+}
 
 function getOrderStatusClass(status) {
   const s = String(status || "").toLowerCase();
@@ -372,7 +355,7 @@ function getOrderStatusClass(status) {
   if (s.includes("deliver")) return "bf-status-success";
   if (s.includes("ship") || s.includes("out for delivery")) return "bf-status-progress";
   if (s.includes("confirm") || s.includes("pack")) return "bf-status-warning";
-  return "bf-status-pending"; // Pending / Ordered / anything else
+  return "bf-status-pending";
 }
 
 function renderOrderRow(order) {
@@ -409,7 +392,6 @@ function renderOrderRow(order) {
   `;
 }
 
-// Filters the already-loaded orders in memory — no new Firestore query.
 function getFilteredOrders() {
   let list = currentOrdersState.orders;
 
@@ -436,9 +418,6 @@ function getFilteredOrders() {
   return list;
 }
 
-// Renders whatever the current known state is for this user's orders —
-// idle/loading placeholder, error message, empty state, or the
-// (search/filter-applied) list.
 function renderOrdersSectionHTML(uid) {
   if (currentOrdersState.uid !== uid || currentOrdersState.status === "loading") {
     return `<p class="bf-state-text">Loading orders...</p>`;
@@ -462,12 +441,6 @@ function updateOrdersContainer() {
   if (container) container.innerHTML = renderOrdersSectionHTML(currentDetailsUserId);
 }
 
-const ORDER_STATUS_OPTIONS = ["Pending", "Confirmed", "Packed", "Shipped", "Delivered", "Cancelled"];
-const PAYMENT_STATUS_OPTIONS = ["Pending", "Paid", "Failed", "Refunded"];
-
-// Fields already shown as dedicated rows below — everything else on
-// the order document is auto-listed so nothing genuinely present
-// gets hidden, without inventing rows for fields that don't exist.
 const ORDER_HANDLED_KEYS = new Set([
   "userId", "mobile", "phone", "address", "products",
   "total", "totalPrice", "status", "paymentStatus",
@@ -501,19 +474,11 @@ function renderOrderDetails(order) {
   rows.push(detailRow("Phone", order.mobile || order.phone || "Not available"));
   rows.push(detailRow("Created date", getCreatedDate(order)));
 
-  const updatedValue = order.updatedAt || order.modifiedAt || order.cancelledAt;
-  rows.push(detailRow("Updated date", updatedValue ? formatDateValue(updatedValue) : "Not available"));
-
-  // Any other existing fields on this order document (e.g. paymentMethod, paymentId, customerName).
   Object.keys(order)
     .filter(key => key !== "id" && !ORDER_HANDLED_KEYS.has(key))
     .forEach(key => {
       const raw = order[key];
-      let value;
-      if (raw === null || raw === undefined || raw === "") value = "Not available";
-      else if (raw && typeof raw.toDate === "function") value = formatDateValue(raw);
-      else if (typeof raw === "object") value = JSON.stringify(raw);
-      else value = String(raw);
+      let value = (raw === null || raw === undefined || raw === "") ? "Not available" : String(raw);
       rows.push(detailRow(formatFieldLabel(key), value));
     });
 
@@ -557,59 +522,43 @@ function renderOrderDetails(order) {
   `;
 }
 
-// Updates the "status" field — confirmed as the actual field name
-// used on order documents (checkout.js writes it, orders.js and the
-// existing admin.js orders page both read/update it the same way).
 async function saveOrderStatus(orderId) {
   const select = document.getElementById("orderStatusSelect");
   const saveBtn = document.getElementById("saveOrderStatusBtn");
   if (!select || !saveBtn) return;
 
   const newStatus = select.value;
-
   saveBtn.disabled = true;
   saveBtn.textContent = "Saving...";
 
   try {
     await updateDoc(doc(db, "orders", orderId), { status: newStatus });
 
-    // Keep the cached order data in sync so both the modal and the
-    // list behind it reflect the new status immediately.
     const orderIndex = currentOrdersState.orders.findIndex(o => o.id === orderId);
     if (orderIndex !== -1) {
-      currentOrdersState.orders[orderIndex] = {
-        ...currentOrdersState.orders[orderIndex],
-        status: newStatus
-      };
+      currentOrdersState.orders[orderIndex].status = newStatus;
     }
 
     showToast("Order status updated successfully", "success");
-
-    const updatedOrder = currentOrdersState.orders[orderIndex];
-    if (updatedOrder) renderOrderDetails(updatedOrder);
-
+    if (currentOrdersState.orders[orderIndex]) {
+      renderOrderDetails(currentOrdersState.orders[orderIndex]);
+    }
     updateOrdersContainer();
-
   } catch (error) {
     console.error("Order status update error:", error);
-    showToast(error.message || "Failed to update order status. Please try again.", "danger");
+    showToast(error.message || "Failed to update order status.", "danger");
+  } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Save Status";
   }
 }
 
-// Order documents have no existing payment-status field (only
-// "paymentMethod" and, for online payments, "paymentId" — neither
-// represents a Pending/Paid/Failed/Refunded state). Per the task,
-// a new "paymentStatus" field is added, following the same naming
-// convention as the existing "status"/"paymentMethod"/"paymentId" fields.
 async function savePaymentStatus(orderId) {
   const select = document.getElementById("paymentStatusSelect");
   const saveBtn = document.getElementById("savePaymentStatusBtn");
   if (!select || !saveBtn) return;
 
   const newPaymentStatus = select.value;
-
   saveBtn.disabled = true;
   saveBtn.textContent = "Saving...";
 
@@ -618,26 +567,116 @@ async function savePaymentStatus(orderId) {
 
     const orderIndex = currentOrdersState.orders.findIndex(o => o.id === orderId);
     if (orderIndex !== -1) {
-      currentOrdersState.orders[orderIndex] = {
-        ...currentOrdersState.orders[orderIndex],
-        paymentStatus: newPaymentStatus
-      };
+      currentOrdersState.orders[orderIndex].paymentStatus = newPaymentStatus;
     }
 
     showToast("Payment status updated successfully", "success");
-
-    const updatedOrder = currentOrdersState.orders[orderIndex];
-    if (updatedOrder) renderOrderDetails(updatedOrder);
-
+    if (currentOrdersState.orders[orderIndex]) {
+      renderOrderDetails(currentOrdersState.orders[orderIndex]);
+    }
     updateOrdersContainer();
-
   } catch (error) {
     console.error("Payment status update error:", error);
-    showToast(error.message || "Failed to update payment status. Please try again.", "danger");
+    showToast(error.message || "Failed to update payment status.", "danger");
+  } finally {
     saveBtn.disabled = false;
     saveBtn.textContent = "Save Payment Status";
   }
 }
 
-// Fetches orders for this user from Firestore. Matches the "userId"
-// field, which is what order documen
+
+/* =========================
+   EVENT LISTENERS & INIT
+========================= */
+
+// User Search Filter
+if (userSearch) {
+  userSearch.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase().trim();
+    const filtered = allUsers.filter(u => {
+      const name = (u.name || u.fullName || u.displayName || "").toLowerCase();
+      const email = (u.email || "").toLowerCase();
+      const phone = (u.phone || u.mobile || "").toLowerCase();
+      return name.includes(term) || email.includes(term) || phone.includes(term);
+    });
+    renderUsers(filtered);
+  });
+}
+
+// User List Click Handling (View Details)
+if (usersList) {
+  usersList.addEventListener("click", (e) => {
+    const btn = e.target.closest(".view-details-btn");
+    if (btn) {
+      const uid = btn.dataset.uid;
+      const user = allUsers.find(u => u.id === uid);
+      if (user) {
+        currentDetailsUserId = uid;
+        renderUserDetails(user);
+        openModal(userDetailsModal);
+        loadUserOrders(uid);
+      }
+    }
+  });
+}
+
+// Order Details Modal Click Handling (View Order & Save Status)
+if (userDetailsContent) {
+  userDetailsContent.addEventListener("click", (e) => {
+    const btn = e.target.closest(".view-order-btn");
+    if (btn) {
+      const orderId = btn.dataset.orderId;
+      const order = currentOrdersState.orders.find(o => o.id === orderId);
+      if (order) {
+        renderOrderDetails(order);
+        openModal(orderDetailsModal);
+      }
+    }
+  });
+
+  userDetailsContent.addEventListener("input", (e) => {
+    if (e.target.id === "orderSearchInput") {
+      orderSearchTerm = e.target.value;
+      updateOrdersContainer();
+    }
+  });
+
+  userDetailsContent.addEventListener("change", (e) => {
+    if (e.target.id === "orderStatusFilterSelect") {
+      orderStatusFilter = e.target.value;
+      updateOrdersContainer();
+    }
+  });
+}
+
+if (orderDetailsContent) {
+  orderDetailsContent.addEventListener("click", (e) => {
+    if (e.target.id === "saveOrderStatusBtn") {
+      const orderId = e.target.dataset.orderId;
+      saveOrderStatus(orderId);
+    }
+    if (e.target.id === "savePaymentStatusBtn") {
+      const orderId = e.target.dataset.orderId;
+      savePaymentStatus(orderId);
+    }
+  });
+}
+
+// Modal Close Buttons
+if (userDetailsCloseBtn) {
+  userDetailsCloseBtn.addEventListener("click", () => closeModal(userDetailsModal));
+}
+
+if (orderDetailsCloseBtn) {
+  orderDetailsCloseBtn.addEventListener("click", () => closeModal(orderDetailsModal));
+}
+
+// App Initialization Check & Load
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loadUsers();
+  } else {
+    window.location.href = "login.html";
+  }
+});
+      
