@@ -35,6 +35,8 @@ const orderDetailsCloseBtn = document.getElementById("orderDetailsCloseBtn");
 let allUsers = [];
 let currentDetailsUserId = null;
 let currentOrdersState = { uid: null, status: "idle", orders: [] };
+let orderSearchTerm = "";
+let orderStatusFilter = "All Status";
 
 
 /* =========================
@@ -335,6 +337,24 @@ function renderUserDetails(user) {
 
     <div style="margin-top:24px;">
       <h3 style="font-size:15px;margin:0 0 10px;">📦 Orders</h3>
+
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+        <input
+          type="search"
+          id="orderSearchInput"
+          class="bf-input"
+          placeholder="Search orders..."
+          value="${escapeHtml(orderSearchTerm)}"
+          style="flex:1; min-width:160px;">
+
+        <select id="orderStatusFilterSelect" class="bf-select" style="max-width:170px;">
+          <option value="All Status" ${orderStatusFilter === "All Status" ? "selected" : ""}>All Status</option>
+          ${ORDER_STATUS_OPTIONS.map(opt =>
+            `<option value="${opt}" ${orderStatusFilter === opt ? "selected" : ""}>${opt}</option>`
+          ).join("")}
+        </select>
+      </div>
+
       <div id="userOrdersList">
         ${renderOrdersSectionHTML(user.id)}
       </div>
@@ -389,8 +409,36 @@ function renderOrderRow(order) {
   `;
 }
 
+// Filters the already-loaded orders in memory — no new Firestore query.
+function getFilteredOrders() {
+  let list = currentOrdersState.orders;
+
+  if (orderStatusFilter !== "All Status") {
+    list = list.filter(o => o.status === orderStatusFilter);
+  }
+
+  const term = orderSearchTerm.trim().toLowerCase();
+  if (term) {
+    list = list.filter(o => {
+      const productNames = Array.isArray(o.products)
+        ? o.products.map(p => p.productName || "").join(" ")
+        : "";
+      const searchable = `
+        ${o.id || ""}
+        ${productNames}
+        ${o.customerName || ""}
+        ${o.mobile || o.phone || ""}
+      `.toLowerCase();
+      return searchable.includes(term);
+    });
+  }
+
+  return list;
+}
+
 // Renders whatever the current known state is for this user's orders —
-// idle/loading placeholder, error message, empty state, or the list.
+// idle/loading placeholder, error message, empty state, or the
+// (search/filter-applied) list.
 function renderOrdersSectionHTML(uid) {
   if (currentOrdersState.uid !== uid || currentOrdersState.status === "loading") {
     return `<p class="bf-state-text">Loading orders...</p>`;
@@ -400,11 +448,13 @@ function renderOrdersSectionHTML(uid) {
     return `<p class="bf-state-text">⚠️ Unable to load orders. Please try again.</p>`;
   }
 
-  if (!currentOrdersState.orders.length) {
+  const filtered = getFilteredOrders();
+
+  if (!filtered.length) {
     return `<p class="bf-state-text">No orders found</p>`;
   }
 
-  return currentOrdersState.orders.map(renderOrderRow).join("");
+  return filtered.map(renderOrderRow).join("");
 }
 
 function updateOrdersContainer() {
@@ -590,48 +640,4 @@ async function savePaymentStatus(orderId) {
 }
 
 // Fetches orders for this user from Firestore. Matches the "userId"
-// field, which is what order documents actually use (confirmed in
-// checkout.js / orders.js / admin.js) — not "uid" or "customerId".
-async function loadUserOrders(uid) {
-  currentOrdersState = { uid, status: "loading", orders: [] };
-  updateOrdersContainer();
-
-  try {
-    const q = query(collection(db, "orders"), where("userId", "==", uid));
-    const snapshot = await getDocs(q);
-    const orders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-
-    if (currentDetailsUserId === uid) {
-      currentOrdersState = { uid, status: "loaded", orders };
-      updateOrdersContainer();
-    }
-  } catch (error) {
-    console.error("User orders fetch error:", error);
-    if (currentDetailsUserId === uid) {
-      currentOrdersState = { uid, status: "error", orders: [] };
-      updateOrdersContainer();
-    }
-  }
-}
-
-function renderEditUserForm(user) {
-  const name = user.name || user.fullName || user.displayName || "";
-  const phone = user.phone || user.mobile || "";
-  const address = user.address || "";
-  const isActiveNow = getAccountStatus(user) !== "Inactive";
-
-  userDetailsContent.innerHTML = `
-    <form id="editUserForm">
-
-      <div class="bf-field">
-        <label class="bf-label">Name</label>
-        <input type="text" class="bf-input" id="editName" value="${escapeHtml(name)}" required>
-      </div>
-
-      <div class="bf-field">
-        <label class="bf-label">Email (read-only)</label>
-        <input type="email" class="bf-input" value="${escapeHtml(user.email || "")}" readonly disabled>
-      </div>
-
-      <div class="bf-field">
-        
+// field, which is what order documen
