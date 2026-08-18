@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Products</title>
+
+  <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="admin-products.css">
+</head>
+<body>
+
+<nav class="admin-nav">
+  <a href="admin-dashboard.html">📊 Dashboard</a>
+  <a href="admin-products.html" class="active">📦 Products</a>
+  <a href="admin.html">🧾 Orders</a>
+  <a href="admin-users.html">👥 Users</a>
+  <a href="home.html">🏠 Store</a>
+</nav>
+
+<h1>📦 Admin Product Manager</h1>
+
+<form id="productForm">
+
+  <label>Select Product Images (first one is main image)</label>
+
+<input
+  type="file"
+  id="imageFile"
+  accept="image/*"
+  multiple
+>
+
+<br><br>
+
+<div id="previewRow" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+
+<br>
+  <input
+    type="text"
+    id="productName"
+    placeholder="Product Name"
+    required
+  >
+
+  <input
+    type="text"
+    id="category"
+    placeholder="Category"
+    required
+  >
+
+  <input
+    type="number"
+    id="mrp"
+    placeholder="MRP (Original Price, optional)"
+    min="0"
+  >
+
+  <input
+    type="number"
+    id="price"
+    placeholder="Selling Price"
+    required
+  >
+
+  <input
+    type="number"
+    id="stock"
+    placeholder="Stock Quantity"
+    min="0"
+    required
+  >
+
+  <textarea
+    id="description"
+    placeholder="Description"
+    required
+  ></textarea>
+
+  <input
+    type="text"
+    id="sizes"
+    placeholder="Sizes, comma separated (optional) e.g. S,M,L"
+  >
+
+  <input
+    type="text"
+    id="colours"
+    placeholder="Colours, comma separated (optional) e.g. Red,Blue,Black"
+  >
+
+  <label for="status">Status</label>
+  <select id="status">
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+
+  <button type="submit">
+    Save Product
+  </button>
+
+</form>
+
+<hr>
+
+<h2>All Products</h2>
+
+<p id="productCount" style="text-align:center; font-weight:600;">Total Products: 0</p>
+
+<input
+  type="search"
+  id="productSearch"
+  placeholder="Search Products (name or category)..."
+  style="display:block; max-width:600px; margin:0 auto 16px;"
+>
+
+<div id="products"></div>
+
+<script type="module" src="admin-products.js"></script>
+
+</body>
+</html>
