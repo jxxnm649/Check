@@ -16,6 +16,8 @@ import {
 
 const form = document.getElementById("productForm");
 const productsDiv = document.getElementById("products");
+const productCount = document.getElementById("productCount");
+const productSearch = document.getElementById("productSearch");
 
 const imageFile = document.getElementById("imageFile");
 const previewRow = document.getElementById("previewRow");
@@ -23,6 +25,7 @@ const previewRow = document.getElementById("previewRow");
 let editMode = false;
 let editProductId = null;
 let existingImages = [];
+let allProducts = [];
 imageFile.value = "";
 imageFile.addEventListener("change", () => {
 
@@ -137,7 +140,8 @@ form.addEventListener("submit", async (e) => {
           : [],
         colours: document.getElementById("colours").value
           ? document.getElementById("colours").value.split(",").map(s => s.trim()).filter(Boolean)
-          : []
+          : [],
+        status: document.getElementById("status").value
 
     };
 
@@ -168,6 +172,7 @@ form.addEventListener("submit", async (e) => {
 
     form.reset();
 
+    document.getElementById("status").value = "Active";
     previewRow.innerHTML = "";
     existingImages = [];
     imageFile.value = "";
@@ -181,18 +186,39 @@ async function loadProducts() {
 
     const querySnapshot = await getDocs(collection(db, "products"));
 
-    productsDiv.innerHTML = "";
+    allProducts = querySnapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data()
+    }));
 
-    if (querySnapshot.empty) {
+    renderProductList();
+
+}
+
+function renderProductList() {
+
+    const term = productSearch.value.trim().toLowerCase();
+
+    const filtered = term
+        ? allProducts.filter((product) => {
+            const name = (product.productName || "").toLowerCase();
+            const category = (product.category || "").toLowerCase();
+            return name.includes(term) || category.includes(term);
+        })
+        : allProducts;
+
+    productCount.textContent = `Total Products: ${allProducts.length}`;
+
+    if (filtered.length === 0) {
         productsDiv.innerHTML = "<h2>No Products Found</h2>";
         return;
     }
 
-    querySnapshot.forEach((docSnap) => {
+    productsDiv.innerHTML = filtered.map((product) => {
 
-        const product = docSnap.data();
+        const status = product.status === "Inactive" ? "Inactive" : "Active";
 
-        productsDiv.innerHTML += `
+        return `
 
         <div class="card">
 
@@ -217,9 +243,13 @@ async function loadProducts() {
                     ${(product.stock ?? 0) === 0 ? "Out of Stock" : `${product.stock ?? 0} in stock`}
                 </p>
 
+                <p style="font-weight:600; color:${status === "Active" ? "#2F7A4F" : "#C1442D"};">
+                    ${status}
+                </p>
+
                 <p>${product.description}</p>
 
-                <button onclick="editProduct('${docSnap.id}')">
+                <button onclick="editProduct('${product.id}')">
                     ✏️ Edit
                 </button>
 
@@ -227,7 +257,7 @@ async function loadProducts() {
 
                 <button
                     style="background:red"
-                    onclick="deleteProduct('${docSnap.id}')">
+                    onclick="deleteProduct('${product.id}')">
                     🗑️ Delete
                 </button>
 
@@ -237,9 +267,11 @@ async function loadProducts() {
 
         `;
 
-    });
+    }).join("");
 
 }
+
+productSearch.addEventListener("input", renderProductList);
 
 // Delete Product
 window.deleteProduct = async function(id) {
@@ -283,6 +315,7 @@ window.editProduct = async function(id) {
         document.getElementById("description").value = product.description;
         document.getElementById("sizes").value = (product.sizes || []).join(", ");
         document.getElementById("colours").value = (product.colours || []).join(", ");
+        document.getElementById("status").value = product.status === "Inactive" ? "Inactive" : "Active";
 
         editMode = true;
         editProductId = id;

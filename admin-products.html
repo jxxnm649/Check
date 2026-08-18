@@ -90,6 +90,12 @@
     placeholder="Colours, comma separated (optional) e.g. Red,Blue,Black"
   >
 
+  <label for="status">Status</label>
+  <select id="status">
+    <option value="Active">Active</option>
+    <option value="Inactive">Inactive</option>
+  </select>
+
   <button type="submit">
     Save Product
   </button>
@@ -99,6 +105,15 @@
 <hr>
 
 <h2>All Products</h2>
+
+<p id="productCount" style="text-align:center; font-weight:600;">Total Products: 0</p>
+
+<input
+  type="search"
+  id="productSearch"
+  placeholder="Search Products (name or category)..."
+  style="display:block; max-width:600px; margin:0 auto 16px;"
+>
 
 <div id="products"></div>
 
