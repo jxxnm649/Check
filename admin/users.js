@@ -613,7 +613,7 @@ if (usersList) {
       if (user) {
         currentDetailsUserId = uid;
         renderUserDetails(user);
-        openModal(userDetailsModal);
+        openModal("userDetailsModal");
         loadUserOrders(uid);
       }
     }
@@ -629,7 +629,7 @@ if (userDetailsContent) {
       const order = currentOrdersState.orders.find(o => o.id === orderId);
       if (order) {
         renderOrderDetails(order);
-        openModal(orderDetailsModal);
+        openModal("orderDetailsModal");
       }
     }
   });
@@ -664,11 +664,11 @@ if (orderDetailsContent) {
 
 // Modal Close Buttons
 if (userDetailsCloseBtn) {
-  userDetailsCloseBtn.addEventListener("click", () => closeModal(userDetailsModal));
+  userDetailsCloseBtn.addEventListener("click", () => closeModal("userDetailsModal"));
 }
 
 if (orderDetailsCloseBtn) {
-  orderDetailsCloseBtn.addEventListener("click", () => closeModal(orderDetailsModal));
+  orderDetailsCloseBtn.addEventListener("click", () => closeModal("orderDetailsModal"));
 }
 
 // App Initialization Check & Load
@@ -679,4 +679,3 @@ onAuthStateChanged(auth, (user) => {
     window.location.href = "login.html";
   }
 });
-      
