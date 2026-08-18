@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+  <title>Admin Dashboard</title>
+
+  <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="admin-dashboard.css">
+
+</head>
+
+<body>
+
+<nav class="admin-nav">
+  <a href="admin-dashboard.html" class="active">📊 Dashboard</a>
+  <a href="admin-products.html">📦 Products</a>
+  <a href="admin.html">🧾 Orders</a>
+  <a href="admin-users.html">👥 Users</a>
+  <a href="home.html">🏠 Store</a>
+</nav>
+
+<h1>📊 Admin Dashboard</h1>
+
+<div class="grid">
+
+  <div class="card">
+    <h2>Total Users</h2>
+    <h1 id="users">0</h1>
+  </div>
+
+  <div class="card">
+    <h2>Total Products</h2>
+    <h1 id="products">0</h1>
+  </div>
+
+  <div class="card">
+    <h2>Total Orders</h2>
+    <h1 id="orders">0</h1>
+  </div>
+
+  <div class="card">
+    <h2>Total Revenue</h2>
+    <h1 id="revenue">₹0</h1>
+  </div>
+
+  <div class="card">
+    <h2>Pending</h2>
+    <h1 id="pending">0</h1>
+  </div>
+
+  <div class="card">
+    <h2>Delivered</h2>
+    <h1 id="delivered">0</h1>
+  </div>
+
+</div>
+
+<h2 style="margin-top:32px;">📦 Order Overview</h2>
+
+<div class="grid" id="orderOverviewGrid">
+
+  <div class="card">
+    <h2>Total Orders</h2>
+    <h1 id="ov-total">Loading...</h1>
+  </div>
+
+  <div class="card">
+    <h2>Pending</h2>
+    <h1 id="ov-pending">Loading...</h1>
+  </div>
+
+  <div class="card">
+    <h2>Confirmed</h2>
+    <h1 id="ov-confirmed">Loading...</h1>
+  </div>
+
+  <div class="card">
+    <h2>Packed</h2>
+    <h1 id="ov-packed">Loading...</h1>
+  </div>
+
+  <div class="card">
+    <h2>Shipped</h2>
+    <h1 id="ov-shipped">Loading...</h1>
+  </div>
+
+  <div class="card">
+    <h2>Delivered</h2>
+    <h1 id="ov-delivered">Loading...</h1>
+  </div>
+
+  <div class="card">
+    <h2>Cancelled</h2>
+    <h1 id="ov-cancelled">Loading...</h1>
+  </div>
+
+</div>
+
+<p id="orderOverviewError" style="display:none; color:#C1442D; margin-top:14px; text-align:center;"></p>
+
+<script type="module" src="admin-dashboard.js"></script>
+
+</body>
+
+</html>
