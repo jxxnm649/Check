@@ -170,7 +170,8 @@ const NAV_ITEMS = [
     id: "cashback",
     label: "Cashback",
     icon: "💸",
-    permission: "cashback"
+    permission: "cashback",
+    ready: true
   },
 
   {
@@ -792,6 +793,18 @@ adminNav.addEventListener(
 
       window.location.href =
         "commissions.html";
+
+      return;
+
+    }
+
+
+    /* ---------- CASHBACK ---------- */
+
+    if (navId === "cashback") {
+
+      window.location.href =
+        "cashback.html";
 
       return;
 

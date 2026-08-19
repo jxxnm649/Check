@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Products — Bestify Admin</title>
+  <title>Cashback — Bestify Admin</title>
 
   <link rel="stylesheet" href="../theme.css">
   <link rel="stylesheet" href="../design-system.css">
@@ -46,7 +46,8 @@
         </button>
 
         <button
-          class="bf-admin-nav-item bf-admin-nav-active">
+          class="bf-admin-nav-item"
+          onclick="location.href='products.html'">
           📦
           <span>Products</span>
         </button>
@@ -87,8 +88,7 @@
         </button>
 
         <button
-          class="bf-admin-nav-item"
-          onclick="location.href='cashback.html'">
+          class="bf-admin-nav-item bf-admin-nav-active">
           💸
           <span>Cashback</span>
         </button>
@@ -118,7 +118,7 @@
           </span>
 
           <span class="bf-admin-header-label">
-            Products
+            Cashback
           </span>
 
         </div>
@@ -132,64 +132,67 @@
         <section class="bf-admin-welcome">
 
           <h1>
-            Products
+            Cashback
           </h1>
 
           <p class="bf-admin-welcome-sub">
-            Add, edit, and manage your Bestify catalog.
+            Give customers wallet cashback and track what's been credited.
           </p>
 
         </section>
 
 
+        <!-- Summary -->
+        <div
+          id="cashbackSummary"
+          style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+        </div>
+
+
         <div style="margin-bottom:20px;">
           <button
             type="button"
-            id="addProductBtn"
+            id="addCashbackBtn"
             class="bf-btn bf-btn-primary">
-            + Add Product
+            + Add Cashback Entry
           </button>
         </div>
 
 
-        <!-- Search -->
+        <!-- Search + filter -->
         <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
 
           <input
             type="search"
-            id="productSearch"
+            id="cashbackSearch"
             class="bf-input"
-            placeholder="Search products by name or category..."
+            placeholder="Search by customer name..."
             style="flex:1; min-width:220px; max-width:500px;">
 
-          <select id="productStatusFilter" class="bf-select" style="max-width:170px;">
+          <select id="cashbackStatusFilter" class="bf-select" style="max-width:170px;">
             <option value="All">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+            <option value="Pending">Pending</option>
+            <option value="Credited">Credited</option>
           </select>
 
         </div>
 
 
-        <!-- Product count -->
+        <!-- Cashback count -->
         <div
-          id="productCount"
+          id="cashbackCount"
           style="margin-bottom:15px;font-weight:600;">
-          Loading products...
+          Loading cashback entries...
         </div>
 
 
-        <!-- Products -->
+        <!-- Cashback list -->
         <div
-          id="productsList"
-          style="
-            display:grid;
-            grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-            gap:16px;
-          ">
+          id="cashbackList"
+          style="display:flex; flex-direction:column; gap:12px;">
 
           <div class="bf-card" style="padding:20px;">
-            Loading products...
+            Loading cashback entries...
           </div>
 
         </div>
@@ -201,80 +204,53 @@
   </div>
 
 
-  <!-- Add / Edit Product Modal -->
-  <div id="productFormModal" class="bf-modal-overlay">
+  <!-- Add Cashback Modal -->
+  <div id="cashbackFormModal" class="bf-modal-overlay">
     <div class="bf-modal">
       <button
         type="button"
         class="bf-modal-close"
-        id="productFormCloseBtn"
+        id="cashbackFormCloseBtn"
         aria-label="Close">
         ✕
       </button>
 
-      <h2 class="bf-modal-title" id="productFormTitle">Add Product</h2>
+      <h2 class="bf-modal-title">Add Cashback Entry</h2>
 
-      <form id="productForm">
-
-        <div class="bf-field">
-          <label class="bf-label">Product Images (first one is main image)</label>
-          <input type="file" id="imageFile" accept="image/*" multiple>
-          <div id="previewRow" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
-        </div>
+      <form id="cashbackForm">
 
         <div class="bf-field">
-          <label class="bf-label">Product Name</label>
-          <input type="text" id="productName" class="bf-input" required>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Category</label>
-          <input type="text" id="category" class="bf-input" required>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">MRP (original price, optional)</label>
-          <input type="number" id="mrp" class="bf-input" min="0">
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Selling Price</label>
-          <input type="number" id="price" class="bf-input" min="0" required>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Stock Quantity</label>
-          <input type="number" id="stock" class="bf-input" min="0" required>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Description</label>
-          <textarea id="description" class="bf-textarea" required></textarea>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Sizes (comma separated, optional)</label>
-          <input type="text" id="sizes" class="bf-input" placeholder="S, M, L">
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Colours (comma separated, optional)</label>
-          <input type="text" id="colours" class="bf-input" placeholder="Red, Blue, Black">
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Status</label>
-          <select id="status" class="bf-select">
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+          <label class="bf-label">Customer</label>
+          <select id="cashbackUserSelect" class="bf-select" required>
+            <option value="">Select a user...</option>
           </select>
+        </div>
+
+        <div class="bf-field">
+          <label class="bf-label">Order Amount (₹) — optional, for auto-calc</label>
+          <input type="number" id="cashbackOrderAmount" class="bf-input" min="0" step="0.01">
+        </div>
+
+        <div class="bf-field">
+          <label class="bf-label">Cashback % — optional, for auto-calc</label>
+          <input type="number" id="cashbackPercent" class="bf-input" min="0" max="100" step="0.01" value="5">
+        </div>
+
+        <div class="bf-field">
+          <label class="bf-label">Cashback Amount (₹)</label>
+          <input type="number" id="cashbackAmount" class="bf-input" min="0" step="0.01" value="0.00" required>
+        </div>
+
+        <div class="bf-field">
+          <label class="bf-label">Note (optional)</label>
+          <input type="text" id="cashbackNote" class="bf-input" placeholder="e.g. Festive cashback offer">
         </div>
 
         <button
           type="submit"
-          id="productFormSubmitBtn"
+          id="cashbackFormSubmitBtn"
           class="bf-btn bf-btn-primary bf-btn-block">
-          Save Product
+          Save Cashback
         </button>
 
       </form>
@@ -282,7 +258,7 @@
   </div>
 
 
-  <script type="module" src="products.js"></script>
+  <script type="module" src="cashback.js"></script>
 
 </body>
 </html>
