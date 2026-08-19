@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Vendors — Bestify Admin</title>
+  <title>Repairs — Bestify Admin</title>
 
   <link rel="stylesheet" href="../theme.css">
   <link rel="stylesheet" href="../design-system.css">
@@ -60,7 +60,8 @@
         </button>
 
         <button
-          class="bf-admin-nav-item bf-admin-nav-active">
+          class="bf-admin-nav-item"
+          onclick="location.href='vendors.html'">
           🏬
           <span>Vendors</span>
         </button>
@@ -101,8 +102,7 @@
         </button>
 
         <button
-          class="bf-admin-nav-item"
-          onclick="location.href='repairs.html'">
+          class="bf-admin-nav-item bf-admin-nav-active">
           🔧
           <span>Repairs</span>
         </button>
@@ -125,7 +125,7 @@
           </span>
 
           <span class="bf-admin-header-label">
-            Vendors
+            Repairs
           </span>
 
         </div>
@@ -139,22 +139,29 @@
         <section class="bf-admin-welcome">
 
           <h1>
-            Vendors
+            Repairs
           </h1>
 
           <p class="bf-admin-welcome-sub">
-            Onboard, edit, and manage seller accounts on Bestify.
+            Log and track device repair requests from start to finish.
           </p>
 
         </section>
 
 
+        <!-- Summary -->
+        <div
+          id="repairsSummary"
+          style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
+        </div>
+
+
         <div style="margin-bottom:20px;">
           <button
             type="button"
-            id="addVendorBtn"
+            id="addRepairBtn"
             class="bf-btn bf-btn-primary">
-            + Add Vendor
+            + New Repair Request
           </button>
         </div>
 
@@ -164,40 +171,39 @@
 
           <input
             type="search"
-            id="vendorSearch"
+            id="repairSearch"
             class="bf-input"
-            placeholder="Search by shop name, owner, or mobile..."
+            placeholder="Search by customer, mobile, or device..."
             style="flex:1; min-width:220px; max-width:500px;">
 
-          <select id="vendorStatusFilter" class="bf-select" style="max-width:170px;">
-            <option value="All">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Pending">Pending</option>
-            <option value="Blocked">Blocked</option>
+          <select id="repairStatusFilter" class="bf-select" style="max-width:180px;">
+            <option value="All Status">All Status</option>
+            <option value="Received">Received</option>
+            <option value="Diagnosing">Diagnosing</option>
+            <option value="In Repair">In Repair</option>
+            <option value="Ready for Pickup">Ready for Pickup</option>
+            <option value="Completed">Completed</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
 
         </div>
 
 
-        <!-- Vendor count -->
+        <!-- Repair count -->
         <div
-          id="vendorCount"
+          id="repairCount"
           style="margin-bottom:15px;font-weight:600;">
-          Loading vendors...
+          Loading repair requests...
         </div>
 
 
-        <!-- Vendors -->
+        <!-- Repairs list -->
         <div
-          id="vendorsList"
-          style="
-            display:grid;
-            grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
-            gap:16px;
-          ">
+          id="repairsList"
+          style="display:flex; flex-direction:column; gap:12px;">
 
           <div class="bf-card" style="padding:20px;">
-            Loading vendors...
+            Loading repair requests...
           </div>
 
         </div>
@@ -209,70 +215,51 @@
   </div>
 
 
-  <!-- Add / Edit Vendor Modal -->
-  <div id="vendorFormModal" class="bf-modal-overlay">
+  <!-- Add Repair Modal -->
+  <div id="repairFormModal" class="bf-modal-overlay">
     <div class="bf-modal">
       <button
         type="button"
         class="bf-modal-close"
-        id="vendorFormCloseBtn"
+        id="repairFormCloseBtn"
         aria-label="Close">
         ✕
       </button>
 
-      <h2 class="bf-modal-title" id="vendorFormTitle">Add Vendor</h2>
+      <h2 class="bf-modal-title">New Repair Request</h2>
 
-      <form id="vendorForm">
+      <form id="repairForm">
 
         <div class="bf-field">
-          <label class="bf-label">Shop / Business Name</label>
-          <input type="text" id="shopName" class="bf-input" required>
+          <label class="bf-label">Customer Name</label>
+          <input type="text" id="repairCustomerName" class="bf-input" required>
         </div>
 
         <div class="bf-field">
-          <label class="bf-label">Owner Name</label>
-          <input type="text" id="ownerName" class="bf-input" required>
+          <label class="bf-label">Mobile Number</label>
+          <input type="text" id="repairMobile" class="bf-input" required>
         </div>
 
         <div class="bf-field">
-          <label class="bf-label">Email</label>
-          <input type="email" id="vendorEmail" class="bf-input" required>
+          <label class="bf-label">Device (make & model)</label>
+          <input type="text" id="repairDevice" class="bf-input" placeholder="e.g. iPhone 13" required>
         </div>
 
         <div class="bf-field">
-          <label class="bf-label">Mobile</label>
-          <input type="tel" id="vendorPhone" class="bf-input" required>
+          <label class="bf-label">Issue Description</label>
+          <textarea id="repairIssue" class="bf-textarea" rows="3" placeholder="e.g. Cracked screen, battery drains fast" required></textarea>
         </div>
 
         <div class="bf-field">
-          <label class="bf-label">Category</label>
-          <input type="text" id="vendorCategory" class="bf-input" placeholder="e.g. Mobile Accessories">
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Address</label>
-          <textarea id="vendorAddress" class="bf-textarea"></textarea>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Commission Rate (%)</label>
-          <input type="number" id="commissionRate" class="bf-input" min="0" max="100" value="10">
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Status</label>
-          <select id="vendorStatus" class="bf-select">
-            <option value="Pending">Pending</option>
-            <option value="Active">Active</option>
-            <option value="Blocked">Blocked</option>
-          </select>
+          <label class="bf-label">Estimated Cost (₹)</label>
+          <input type="number" id="repairEstimatedCost" class="bf-input" min="0" step="0.01">
         </div>
 
         <button
           type="submit"
-          id="vendorFormSubmitBtn"
+          id="repairFormSubmitBtn"
           class="bf-btn bf-btn-primary bf-btn-block">
-          Save Vendor
+          Save Repair Request
         </button>
 
       </form>
@@ -280,7 +267,28 @@
   </div>
 
 
-  <script type="module" src="vendors.js"></script>
+  <!-- Repair Details Modal -->
+  <div id="repairDetailsModal" class="bf-modal-overlay">
+    <div class="bf-modal">
+      <button
+        type="button"
+        class="bf-modal-close"
+        id="repairDetailsCloseBtn"
+        aria-label="Close">
+        ✕
+      </button>
+
+      <h2 class="bf-modal-title">Repair Details</h2>
+
+      <div id="repairDetailsContent">
+        Loading...
+      </div>
+
+    </div>
+  </div>
+
+
+  <script type="module" src="repairs.js"></script>
 
 </body>
 </html>

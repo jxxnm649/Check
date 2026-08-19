@@ -186,7 +186,8 @@ const NAV_ITEMS = [
     id: "repairs",
     label: "Repairs",
     icon: "🔧",
-    permission: "repairs"
+    permission: "repairs",
+    ready: true
   },
 
   {
@@ -817,6 +818,18 @@ adminNav.addEventListener(
 
       window.location.href =
         "referrals.html";
+
+      return;
+
+    }
+
+
+    /* ---------- REPAIRS ---------- */
+
+    if (navId === "repairs") {
+
+      window.location.href =
+        "repairs.html";
 
       return;
 
