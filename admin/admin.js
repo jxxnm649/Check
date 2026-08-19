@@ -194,7 +194,8 @@ const NAV_ITEMS = [
     id: "chats",
     label: "Chats",
     icon: "💬",
-    permission: "chats"
+    permission: "chats",
+    ready: true
   },
 
   {
@@ -830,6 +831,18 @@ adminNav.addEventListener(
 
       window.location.href =
         "repairs.html";
+
+      return;
+
+    }
+
+
+    /* ---------- CHATS ---------- */
+
+    if (navId === "chats") {
+
+      window.location.href =
+        "chats.html";
 
       return;
 

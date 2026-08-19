@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Commissions — Bestify Admin</title>
+  <title>Chats — Bestify Admin</title>
 
   <link rel="stylesheet" href="../theme.css">
   <link rel="stylesheet" href="../design-system.css">
@@ -81,7 +81,8 @@
         </button>
 
         <button
-          class="bf-admin-nav-item bf-admin-nav-active">
+          class="bf-admin-nav-item"
+          onclick="location.href='commissions.html'">
           🧮
           <span>Commissions</span>
         </button>
@@ -108,8 +109,7 @@
         </button>
 
         <button
-          class="bf-admin-nav-item"
-          onclick="location.href='chats.html'">
+          class="bf-admin-nav-item bf-admin-nav-active">
           💬
           <span>Chats</span>
         </button>
@@ -132,7 +132,7 @@
           </span>
 
           <span class="bf-admin-header-label">
-            Commissions
+            Chats
           </span>
 
         </div>
@@ -146,67 +146,54 @@
         <section class="bf-admin-welcome">
 
           <h1>
-            Commissions
+            Chats
           </h1>
 
           <p class="bf-admin-welcome-sub">
-            Track platform commission earned from each vendor's sales.
+            Message customers directly and keep every conversation in one place.
           </p>
 
         </section>
 
 
-        <!-- Summary -->
-        <div
-          id="commissionsSummary"
-          style="display:flex; gap:16px; flex-wrap:wrap; margin-bottom:20px;">
-        </div>
-
-
         <div style="margin-bottom:20px;">
           <button
             type="button"
-            id="addCommissionBtn"
+            id="startChatBtn"
             class="bf-btn bf-btn-primary">
-            + Add Commission Entry
+            + Start New Chat
           </button>
         </div>
 
 
-        <!-- Search + filter -->
-        <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
+        <!-- Search -->
+        <div style="margin-bottom:20px;">
 
           <input
             type="search"
-            id="commissionSearch"
+            id="chatSearch"
             class="bf-input"
-            placeholder="Search by vendor name..."
-            style="flex:1; min-width:220px; max-width:500px;">
-
-          <select id="commissionStatusFilter" class="bf-select" style="max-width:170px;">
-            <option value="All">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Collected">Collected</option>
-          </select>
+            placeholder="Search by customer name..."
+            style="width:100%; max-width:500px;">
 
         </div>
 
 
-        <!-- Commission count -->
+        <!-- Chat count -->
         <div
-          id="commissionCount"
+          id="chatCount"
           style="margin-bottom:15px;font-weight:600;">
-          Loading commissions...
+          Loading chats...
         </div>
 
 
-        <!-- Commissions -->
+        <!-- Chats list -->
         <div
-          id="commissionsList"
+          id="chatsList"
           style="display:flex; flex-direction:column; gap:12px;">
 
           <div class="bf-card" style="padding:20px;">
-            Loading commissions...
+            Loading chats...
           </div>
 
         </div>
@@ -218,53 +205,33 @@
   </div>
 
 
-  <!-- Add Commission Modal -->
-  <div id="commissionFormModal" class="bf-modal-overlay">
+  <!-- Start Chat Modal -->
+  <div id="startChatModal" class="bf-modal-overlay">
     <div class="bf-modal">
       <button
         type="button"
         class="bf-modal-close"
-        id="commissionFormCloseBtn"
+        id="startChatCloseBtn"
         aria-label="Close">
         ✕
       </button>
 
-      <h2 class="bf-modal-title">Add Commission Entry</h2>
+      <h2 class="bf-modal-title">Start New Chat</h2>
 
-      <form id="commissionForm">
+      <form id="startChatForm">
 
         <div class="bf-field">
-          <label class="bf-label">Vendor</label>
-          <select id="commissionVendorSelect" class="bf-select" required>
-            <option value="">Select a vendor...</option>
+          <label class="bf-label">Customer</label>
+          <select id="startChatUserSelect" class="bf-select" required>
+            <option value="">Select a user...</option>
           </select>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Order Amount (₹)</label>
-          <input type="number" id="commissionOrderAmount" class="bf-input" min="0" step="0.01" required>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Commission Rate (%)</label>
-          <input type="number" id="commissionRateInput" class="bf-input" min="0" max="100" step="0.01" value="10" required>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Commission Amount (₹) — auto-calculated</label>
-          <input type="number" id="commissionAmount" class="bf-input" min="0" step="0.01" value="0.00" readonly>
-        </div>
-
-        <div class="bf-field">
-          <label class="bf-label">Note (optional)</label>
-          <input type="text" id="commissionNote" class="bf-input" placeholder="e.g. Order #1234">
         </div>
 
         <button
           type="submit"
-          id="commissionFormSubmitBtn"
+          id="startChatSubmitBtn"
           class="bf-btn bf-btn-primary bf-btn-block">
-          Save Commission
+          Start Chat
         </button>
 
       </form>
@@ -272,7 +239,49 @@
   </div>
 
 
-  <script type="module" src="commissions.js"></script>
+  <!-- Chat Thread Modal -->
+  <div id="chatThreadModal" class="bf-modal-overlay">
+    <div class="bf-modal">
+      <button
+        type="button"
+        class="bf-modal-close"
+        id="chatThreadCloseBtn"
+        aria-label="Close">
+        ✕
+      </button>
+
+      <h2 class="bf-modal-title" id="chatThreadTitle">Conversation</h2>
+
+      <div
+        id="chatMessages"
+        style="max-height:340px; overflow-y:auto; padding:8px 4px; margin-bottom:14px; border-top:1px solid var(--line, #E4DED2); border-bottom:1px solid var(--line, #E4DED2);">
+        Loading messages...
+      </div>
+
+      <form id="chatReplyForm" style="display:flex; gap:8px;">
+
+        <input
+          type="text"
+          id="chatReplyInput"
+          class="bf-input"
+          placeholder="Type a message..."
+          autocomplete="off"
+          style="flex:1;">
+
+        <button
+          type="submit"
+          id="chatReplySendBtn"
+          class="bf-btn bf-btn-primary">
+          Send
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+
+  <script type="module" src="chats.js"></script>
 
 </body>
 </html>
