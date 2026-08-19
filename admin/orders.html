@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Users — Bestify Admin</title>
+  <title>Orders — Bestify Admin</title>
 
   <link rel="stylesheet" href="../theme.css">
   <link rel="stylesheet" href="../design-system.css">
@@ -39,7 +39,8 @@
         </button>
 
         <button
-          class="bf-admin-nav-item bf-admin-nav-active">
+          class="bf-admin-nav-item"
+          onclick="location.href='users.html'">
           👥
           <span>Users</span>
         </button>
@@ -52,8 +53,7 @@
         </button>
 
         <button
-          class="bf-admin-nav-item"
-          onclick="location.href='orders.html'">
+          class="bf-admin-nav-item bf-admin-nav-active">
           🧾
           <span>Orders</span>
         </button>
@@ -111,7 +111,7 @@
           </span>
 
           <span class="bf-admin-header-label">
-            Users
+            Orders
           </span>
 
         </div>
@@ -125,48 +125,55 @@
         <section class="bf-admin-welcome">
 
           <h1>
-            Users
+            Orders
           </h1>
 
           <p class="bf-admin-welcome-sub">
-            Manage registered Bestify users.
+            Track and update every order placed on Bestify.
           </p>
 
         </section>
 
 
-        <!-- Search -->
-        <div style="margin-bottom:20px;">
+        <!-- Search + filter -->
+        <div style="margin-bottom:20px; display:flex; gap:10px; flex-wrap:wrap;">
 
           <input
             type="search"
-            id="userSearch"
-            placeholder="Search users..."
-            style="
-              width:100%;
-              max-width:500px;
-              padding:14px;
-              border:1px solid #ddd;
-              border-radius:10px;
-              font-size:16px;
-            ">
+            id="orderSearch"
+            class="bf-input"
+            placeholder="Search by customer name, mobile, or order ID..."
+            style="flex:1; min-width:220px; max-width:500px;">
+
+          <select id="orderStatusFilter" class="bf-select" style="max-width:180px;">
+            <option value="All Status">All Status</option>
+            <option value="Pending">Pending</option>
+            <option value="Confirmed">Confirmed</option>
+            <option value="Packed">Packed</option>
+            <option value="Shipped">Shipped</option>
+            <option value="Out for Delivery">Out for Delivery</option>
+            <option value="Delivered">Delivered</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
 
         </div>
 
 
-        <!-- User count -->
+        <!-- Order count -->
         <div
-          id="userCount"
+          id="orderCount"
           style="margin-bottom:15px;font-weight:600;">
-          Loading users...
+          Loading orders...
         </div>
 
 
-        <!-- Users -->
-        <div id="usersList">
+        <!-- Orders -->
+        <div
+          id="ordersList"
+          style="display:flex; flex-direction:column; gap:14px;">
 
           <div class="bf-card" style="padding:20px;">
-            Loading users...
+            Loading orders...
           </div>
 
         </div>
@@ -175,25 +182,6 @@
 
     </div>
 
-  </div>
-
-
-  <!-- User Details Modal -->
-  <div id="userDetailsModal" class="bf-modal-overlay">
-    <div class="bf-modal">
-      <button
-        type="button"
-        class="bf-modal-close"
-        id="userDetailsCloseBtn"
-        aria-label="Close">
-        ✕
-      </button>
-
-      <h2 class="bf-modal-title">User Details</h2>
-
-      <div id="userDetailsContent">
-      </div>
-    </div>
   </div>
 
 
@@ -211,12 +199,14 @@
       <h2 class="bf-modal-title">Order Details</h2>
 
       <div id="orderDetailsContent">
+        Loading...
       </div>
+
     </div>
   </div>
 
 
-  <script type="module" src="users.js"></script>
+  <script type="module" src="orders.js"></script>
 
 </body>
 </html>

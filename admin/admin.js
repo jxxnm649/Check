@@ -106,56 +106,64 @@ const NAV_ITEMS = [
     id: "users",
     label: "Users",
     icon: "👥",
-    permission: "users"
+    permission: "users",
+    ready: true
   },
 
   {
     id: "vendors",
     label: "Vendors",
     icon: "🏬",
-    permission: "vendors"
+    permission: "vendors",
+    ready: true
   },
 
   {
     id: "products",
     label: "Products",
     icon: "📦",
-    permission: "products"
+    permission: "products",
+    ready: true
   },
 
   {
     id: "orders",
     label: "Orders",
     icon: "🧾",
-    permission: "orders"
+    permission: "orders",
+    ready: true
   },
 
   {
     id: "payments",
     label: "Payments",
     icon: "💳",
-    permission: "payments"
+    permission: "payments",
+    ready: true
   },
 
   {
     id: "refunds",
     label: "Refunds",
     icon: "↩️",
-    permission: "refunds"
+    permission: "refunds",
+    ready: true
   },
 
   {
     id: "wallets",
     label: "Wallets",
     icon: "👛",
-    permission: "wallets"
+    permission: "wallets",
+    ready: true
   },
 
   {
     id: "commissions",
     label: "Commissions",
     icon: "🧮",
-    permission: "commissions"
+    permission: "commissions",
+    ready: true
   },
 
   {
@@ -169,7 +177,8 @@ const NAV_ITEMS = [
     id: "referrals",
     label: "Referrals",
     icon: "🔗",
-    permission: "referrals"
+    permission: "referrals",
+    ready: true
   },
 
   {
@@ -320,6 +329,9 @@ function renderNav(claims) {
           ? "bf-admin-nav-active"
           : "";
 
+      const isReady =
+        item.active || item.ready === true;
+
 
       return `
 
@@ -337,7 +349,7 @@ function renderNav(claims) {
           </span>
 
           ${
-            item.active
+            isReady
               ? ""
               : `<span class="bf-admin-nav-soon">
                    Soon
@@ -699,6 +711,99 @@ adminNav.addEventListener(
 
       window.location.href =
         "users.html";
+
+      return;
+
+    }
+
+
+    /* ---------- PRODUCTS ---------- */
+
+    if (navId === "products") {
+
+      window.location.href =
+        "products.html";
+
+      return;
+
+    }
+
+
+    /* ---------- ORDERS ---------- */
+
+    if (navId === "orders") {
+
+      window.location.href =
+        "orders.html";
+
+      return;
+
+    }
+
+
+    /* ---------- VENDORS ---------- */
+
+    if (navId === "vendors") {
+
+      window.location.href =
+        "vendors.html";
+
+      return;
+
+    }
+
+
+    /* ---------- PAYMENTS & REFUNDS ---------- */
+
+    if (navId === "payments") {
+
+      window.location.href =
+        "payments.html";
+
+      return;
+
+    }
+
+    if (navId === "refunds") {
+
+      window.location.href =
+        "payments.html#refunds";
+
+      return;
+
+    }
+
+
+    /* ---------- WALLETS ---------- */
+
+    if (navId === "wallets") {
+
+      window.location.href =
+        "wallets.html";
+
+      return;
+
+    }
+
+
+    /* ---------- COMMISSIONS ---------- */
+
+    if (navId === "commissions") {
+
+      window.location.href =
+        "commissions.html";
+
+      return;
+
+    }
+
+
+    /* ---------- REFERRALS ---------- */
+
+    if (navId === "referrals") {
+
+      window.location.href =
+        "referrals.html";
 
       return;
 

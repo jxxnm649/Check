@@ -121,6 +121,8 @@ function renderUsers(users) {
       user.mobile ||
       "No phone";
 
+    const isBlocked = user.blocked === true;
+
     return `
 
       <div
@@ -168,20 +170,39 @@ function renderUsers(users) {
           <span style="
             padding:5px 10px;
             border-radius:20px;
-            background:#e8f5e9;
+            background:${isBlocked ? "#fdecea" : "#e8f5e9"};
+            color:${isBlocked ? "#c62828" : "#2e7d32"};
             font-size:12px;
+            white-space:nowrap;
           ">
-            Active
+            ${isBlocked ? "Blocked" : "Active"}
           </span>
 
         </div>
 
-        <div style="margin-top:14px;">
+        <div style="margin-top:14px; display:flex; gap:8px; flex-wrap:wrap;">
           <button
             type="button"
             class="bf-btn bf-btn-ghost bf-btn-sm view-details-btn"
             data-uid="${escapeHtml(user.id)}">
             View Details
+          </button>
+
+          <button
+            type="button"
+            class="bf-btn bf-btn-ghost bf-btn-sm toggle-block-btn"
+            data-uid="${escapeHtml(user.id)}"
+            data-blocked="${isBlocked}">
+            ${isBlocked ? "Unblock" : "Block"}
+          </button>
+
+          <button
+            type="button"
+            class="bf-btn bf-btn-ghost bf-btn-sm delete-user-btn"
+            data-uid="${escapeHtml(user.id)}"
+            data-name="${escapeHtml(name)}"
+            style="color:#c62828;">
+            Delete
           </button>
         </div>
 
@@ -232,6 +253,7 @@ function formatDateValue(value) {
 }
 
 function getAccountStatus(user) {
+  if (user.blocked === true) return "Blocked";
   if (typeof user.active === "boolean") return user.active ? "Active" : "Inactive";
   if (typeof user.status === "string" && user.status.trim() !== "") return user.status;
   if (typeof user.isActive === "boolean") return user.isActive ? "Active" : "Inactive";
@@ -264,16 +286,14 @@ function detailRow(label, value) {
 }
 
 function renderUserDetails(user) {
-  const name = user.name || user.fullName || user.displayName || "Not available";
+  const name = user.name || user.fullName || user.displayName || "";
   const email = user.email || "Not available";
-  const phone = user.phone || user.mobile || "Not available";
-  const address = user.address || "Not available";
+  const phone = user.phone || user.mobile || "";
+  const address = user.address || "";
+  const isBlocked = user.blocked === true;
 
   const rows = [
-    detailRow("Name", name),
     detailRow("Email", email),
-    detailRow("Phone", phone),
-    detailRow("Address", address),
     detailRow("UID", user.id),
     detailRow("Account status", getAccountStatus(user)),
     detailRow("Created date", getCreatedDate(user)),
@@ -290,10 +310,60 @@ function renderUserDetails(user) {
     });
 
   userDetailsContent.innerHTML = `
-    ${rows.join("")}
-    
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;">
+      <button
+        type="button"
+        id="toggleBlockDetailBtn"
+        class="bf-btn ${isBlocked ? "bf-btn-primary" : "bf-btn-ghost"} bf-btn-sm"
+        data-blocked="${isBlocked}">
+        ${isBlocked ? "Unblock User" : "Block User"}
+      </button>
+
+      <button
+        type="button"
+        id="deleteUserDetailBtn"
+        class="bf-btn bf-btn-ghost bf-btn-sm"
+        style="color:#c62828;">
+        Delete Customer
+      </button>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <h3 style="font-size:15px;margin:0 0 10px;">✏️ Edit Details</h3>
+
+      <div class="bf-field" style="margin-bottom:10px;">
+        <label class="bf-label">Name</label>
+        <input type="text" id="editUserName" class="bf-input" value="${escapeHtml(name)}" placeholder="Full name">
+      </div>
+
+      <div class="bf-field" style="margin-bottom:10px;">
+        <label class="bf-label">Phone</label>
+        <input type="text" id="editUserPhone" class="bf-input" value="${escapeHtml(phone)}" placeholder="Phone number">
+      </div>
+
+      <div class="bf-field" style="margin-bottom:10px;">
+        <label class="bf-label">Address</label>
+        <textarea id="editUserAddress" class="bf-input" rows="2" placeholder="Address">${escapeHtml(address)}</textarea>
+      </div>
+
+      <button
+        type="button"
+        id="saveUserEditBtn"
+        class="bf-btn bf-btn-primary bf-btn-sm">
+        Save Changes
+      </button>
+    </div>
+
+    <div style="margin-bottom:16px;">
+      ${rows.join("")}
+    </div>
+
     <div style="margin-top:24px;">
-      <h3 style="font-size:15px;margin:0 0 10px;">📦 Orders</h3>
+      <h3 style="font-size:15px;margin:0 0 10px;">📦 Order History</h3>
+
+      <div id="userOrdersSummary" style="margin-bottom:12px;">
+        ${renderOrdersSummaryHTML()}
+      </div>
 
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
         <input
@@ -314,6 +384,32 @@ function renderUserDetails(user) {
 
       <div id="userOrdersList">
         ${renderOrdersSectionHTML(user.id)}
+      </div>
+    </div>
+  `;
+}
+
+function renderOrdersSummaryHTML() {
+  if (currentOrdersState.status !== "success") {
+    return "";
+  }
+
+  const orders = currentOrdersState.orders;
+  const totalOrders = orders.length;
+  const totalSpent = orders.reduce((sum, o) => {
+    const amt = Number(o.total ?? o.totalPrice ?? 0);
+    return sum + (isNaN(amt) ? 0 : amt);
+  }, 0);
+
+  return `
+    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+      <div class="bf-card" style="padding:12px 16px;">
+        <div style="font-size:12px; opacity:.65;">Total Orders</div>
+        <div style="font-size:18px; font-weight:700;">${totalOrders}</div>
+      </div>
+      <div class="bf-card" style="padding:12px 16px;">
+        <div style="font-size:12px; opacity:.65;">Total Spent</div>
+        <div style="font-size:18px; font-weight:700;">₹${totalSpent.toLocaleString("en-IN")}</div>
       </div>
     </div>
   `;
@@ -439,6 +535,9 @@ function renderOrdersSectionHTML(uid) {
 function updateOrdersContainer() {
   const container = document.getElementById("userOrdersList");
   if (container) container.innerHTML = renderOrdersSectionHTML(currentDetailsUserId);
+
+  const summary = document.getElementById("userOrdersSummary");
+  if (summary) summary.innerHTML = renderOrdersSummaryHTML();
 }
 
 const ORDER_HANDLED_KEYS = new Set([
@@ -671,11 +770,153 @@ if (orderDetailsCloseBtn) {
   orderDetailsCloseBtn.addEventListener("click", () => closeModal("orderDetailsModal"));
 }
 
-// App Initialization Check & Load
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    loadUsers();
-  } else {
-    window.location.href = "login.html";
+// Block/Unblock & Delete (quick actions on list + inside modal)
+if (usersList) {
+  usersList.addEventListener("click", (e) => {
+    const blockBtn = e.target.closest(".toggle-block-btn");
+    if (blockBtn) {
+      toggleBlockUser(blockBtn.dataset.uid, blockBtn.dataset.blocked === "true");
+      return;
+    }
+    const deleteBtn = e.target.closest(".delete-user-btn");
+    if (deleteBtn) {
+      deleteUser(deleteBtn.dataset.uid, deleteBtn.dataset.name || "this user");
+    }
+  });
+}
+
+if (userDetailsContent) {
+  userDetailsContent.addEventListener("click", (e) => {
+    if (e.target.id === "saveUserEditBtn") {
+      saveUserEdits(currentDetailsUserId);
+    }
+    const blockBtn = e.target.closest("#toggleBlockDetailBtn");
+    if (blockBtn) {
+      toggleBlockUser(currentDetailsUserId, blockBtn.dataset.blocked === "true");
+    }
+    if (e.target.id === "deleteUserDetailBtn") {
+      const user = allUsers.find(u => u.id === currentDetailsUserId);
+      deleteUser(currentDetailsUserId, (user && (user.name || user.fullName || user.email)) || "this user");
+    }
+  });
+}
+
+
+/* =========================
+   EDIT / BLOCK / DELETE ACTIONS
+========================= */
+
+async function saveUserEdits(uid) {
+  const saveBtn = document.getElementById("saveUserEditBtn");
+  const nameInput = document.getElementById("editUserName");
+  const phoneInput = document.getElementById("editUserPhone");
+  const addressInput = document.getElementById("editUserAddress");
+  if (!uid || !saveBtn) return;
+
+  const updates = {
+    name: nameInput.value.trim(),
+    phone: phoneInput.value.trim(),
+    address: addressInput.value.trim()
+  };
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Saving...";
+
+  try {
+    await updateDoc(doc(db, "users", uid), updates);
+
+    const idx = allUsers.findIndex(u => u.id === uid);
+    if (idx !== -1) {
+      allUsers[idx] = { ...allUsers[idx], ...updates };
+      renderUserDetails(allUsers[idx]);
+      renderUsers(allUsers);
+    }
+
+    showToast("User details updated", "success");
+  } catch (error) {
+    console.error("User update error:", error);
+    showToast(error.message || "Failed to update user.", "danger");
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Save Changes";
   }
+}
+
+async function toggleBlockUser(uid, isCurrentlyBlocked) {
+  if (!uid) return;
+
+  const nextBlocked = !isCurrentlyBlocked;
+  const confirmMsg = nextBlocked
+    ? "Block this user? They will no longer be able to log in."
+    : "Unblock this user and restore their access?";
+  if (!window.confirm(confirmMsg)) return;
+
+  try {
+    await updateDoc(doc(db, "users", uid), { blocked: nextBlocked });
+
+    const idx = allUsers.findIndex(u => u.id === uid);
+    if (idx !== -1) {
+      allUsers[idx] = { ...allUsers[idx], blocked: nextBlocked };
+      renderUsers(allUsers);
+      if (currentDetailsUserId === uid) {
+        renderUserDetails(allUsers[idx]);
+      }
+    }
+
+    showToast(nextBlocked ? "User blocked" : "User unblocked", "success");
+  } catch (error) {
+    console.error("Block/unblock error:", error);
+    showToast(error.message || "Failed to update user status.", "danger");
+  }
+}
+
+async function deleteUser(uid, label) {
+  if (!uid) return;
+
+  const sure = window.confirm(
+    `Delete ${label}? This removes their profile and order history access from Bestify. This cannot be undone.`
+  );
+  if (!sure) return;
+
+  try {
+    await deleteDoc(doc(db, "users", uid));
+
+    allUsers = allUsers.filter(u => u.id !== uid);
+    renderUsers(allUsers);
+    userCount.textContent = `Total Users: ${allUsers.length}`;
+
+    if (currentDetailsUserId === uid) {
+      closeModal("userDetailsModal");
+      currentDetailsUserId = null;
+    }
+
+    showToast("Customer deleted", "success");
+  } catch (error) {
+    console.error("Delete user error:", error);
+    showToast(error.message || "Failed to delete customer.", "danger");
+  }
+}
+
+
+// App Initialization Check & Load
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  try {
+    const adminDoc = await getDoc(doc(db, "users", user.uid));
+    if (!adminDoc.exists() || adminDoc.data().isAdmin !== true) {
+      alert("Access Denied ❌");
+      window.location.href = "home.html";
+      return;
+    }
+  } catch (error) {
+    console.error("Admin check error:", error);
+    window.location.href = "home.html";
+    return;
+  }
+
+  loadUsers();
 });
