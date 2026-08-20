@@ -7,36 +7,80 @@ body{
     background: #ffffff;
 }
 
-/* ---------- Brand header (logo) ---------- */
+/* ---------- Brand header (text logo + menu button) ---------- */
 .brand-header{
     display: flex;
+    align-items: center;
     justify-content: center;
-    padding-top: 12px;
+    padding: 16px 18px;
+    margin: 12px 0 4px;
+    border-radius: var(--radius);
+    background: #000;
+    box-shadow: var(--shadow);
 }
 
-.brand-logo-img{
-    width: 100%;
-    max-width: 150px;
-    height: auto;
-    object-fit: contain;
-}
-
-/* ---------- Social links (moved below search bar) ---------- */
-.container > .social-links{
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    margin: 4px 0 12px;
-}
-
-.container > .social-links .social-link{
-    justify-content: center;
-    padding: 14px 6px;
-}
-
-.container > .social-links .social-link i{
+.brand-text{
+    font-family: var(--font-display);
     font-size: 24px;
-    width: auto;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    animation: bfRgbCycle 6s linear infinite;
+}
+
+@keyframes bfRgbCycle{
+    0%   { color: #ff0033; text-shadow: 0 0 8px #ff0033, 0 0 16px #ff0033; }
+    16%  { color: #ff8a00; text-shadow: 0 0 8px #ff8a00, 0 0 16px #ff8a00; }
+    33%  { color: #ffee00; text-shadow: 0 0 8px #ffee00, 0 0 16px #ffee00; }
+    50%  { color: #00ff66; text-shadow: 0 0 8px #00ff66, 0 0 16px #00ff66; }
+    66%  { color: #00c3ff; text-shadow: 0 0 8px #00c3ff, 0 0 16px #00c3ff; }
+    83%  { color: #a259ff; text-shadow: 0 0 8px #a259ff, 0 0 16px #a259ff; }
+    100% { color: #ff0033; text-shadow: 0 0 8px #ff0033, 0 0 16px #ff0033; }
+}
+
+/* ---------- Menu dropdown (social links) ---------- */
+.menu-dropdown{
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: max-height .25s ease, opacity .2s ease, transform .2s ease, margin .25s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--line);
+}
+
+.menu-dropdown.open{
+    max-height: 320px;
+    opacity: 1;
+    transform: translateY(0);
+    margin: 6px 0 12px;
+    padding: 8px;
+}
+
+.menu-link{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 10px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.menu-link:hover, .menu-link:active{
+    background: var(--paper-dim);
+}
+
+.menu-link i{
+    font-size: 20px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .container{
@@ -152,6 +196,9 @@ body{
 
 .category-chip{
     flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     padding: 8px 16px;
     border-radius: 999px;
     background: var(--card);
@@ -162,6 +209,10 @@ body{
     cursor: pointer;
     white-space: nowrap;
     transition: .15s;
+}
+
+.category-chip i{
+    font-size: 12px;
 }
 
 .category-chip.active{
@@ -251,47 +302,20 @@ body{
     color: var(--ink);
 }
 
-.social-links{
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 14px;
-}
-
-.social-link{
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 16px 18px;
-    border-radius: 12px;
-    text-decoration: none;
-    color: var(--ink);
-    background: var(--paper-dim, #f2ece0);
-    font-size: 17px;
-    font-weight: 700;
-}
-
-.social-link i{
-    font-size: 28px;
-    width: 30px;
-    text-align: center;
-    flex-shrink: 0;
-}
-
-.social-link.whatsapp i{ color: #25D366; }
-.social-link.instagram i{
-    background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.social-link.youtube i{ color: #FF0000; }
-.social-link.facebook i{ color: #1877F2; }
-
 /* ---------- Bestify product card (single column, green accent) ---------- */
 .products, .products-grid{
     grid-template-columns: 1fr !important;
     gap: 20px !important;
+}
+
+@media (min-width: 480px){
+    .products, .products-grid{
+        grid-template-columns: 1fr 1fr !important;
+        gap: 16px !important;
+    }
+    .bf-carousel{ aspect-ratio: 1 / 1; }
+    .bf-title{ font-size: 15px; }
+    .bf-current-price{ font-size: 18px; }
 }
 
 .bf-card{
@@ -425,4 +449,4 @@ body{
 
 .bf-btn-cart:disabled, .bf-btn-buy:disabled{
     opacity: 0.5;
-}
+    }
