@@ -223,12 +223,54 @@ attachCardEvents(productContainer);
 attachCardEvents(featuredContainer);
 
 // ---------- Category chips ----------
+const categoryIcons = {
+  all: "fa-solid fa-border-all",
+  speaker: "fa-solid fa-volume-high",
+  cover: "fa-solid fa-mobile-screen-button",
+  covers: "fa-solid fa-mobile-screen-button",
+  case: "fa-solid fa-mobile-screen-button",
+  cases: "fa-solid fa-mobile-screen-button",
+  charger: "fa-solid fa-bolt",
+  chargers: "fa-solid fa-bolt",
+  cable: "fa-solid fa-plug",
+  cables: "fa-solid fa-plug",
+  earphone: "fa-solid fa-headphones",
+  earphones: "fa-solid fa-headphones",
+  headphone: "fa-solid fa-headphones",
+  headphones: "fa-solid fa-headphones",
+  battery: "fa-solid fa-battery-full",
+  batteries: "fa-solid fa-battery-full",
+  watch: "fa-solid fa-clock",
+  watches: "fa-solid fa-clock",
+  mobile: "fa-solid fa-mobile",
+  mobiles: "fa-solid fa-mobile",
+  accessory: "fa-solid fa-tags",
+  accessories: "fa-solid fa-tags"
+};
+
+function iconForCategory(c) {
+  return categoryIcons[String(c).toLowerCase()] || "fa-solid fa-tag";
+}
+
+function normalizeCat(c) {
+  return String(c || "").trim().toLowerCase();
+}
+
 function renderCategories(products) {
-  const categories = ["All", ...new Set(products.map(p => p.category).filter(Boolean))];
+  const seen = new Map(); // normalized -> { name, image }
+  products.forEach(p => {
+    const raw = (p.category || "").trim();
+    const key = normalizeCat(raw);
+    if (raw && !seen.has(key)) seen.set(key, { name: raw, image: p.image || "" });
+  });
+  const categories = [{ name: "All", image: "" }, ...seen.values()];
 
   categoryBar.innerHTML = categories.map(c => `
-    <div class="category-chip ${c === activeCategory ? "active" : ""}" data-cat="${c}">
-      ${c}
+    <div class="category-chip ${normalizeCat(c.name) === normalizeCat(activeCategory) ? "active" : ""}" data-cat="${c.name}">
+      ${c.image
+        ? `<img src="${c.image}" alt="${c.name}" loading="lazy">`
+        : `<i class="${iconForCategory(c.name)}"></i>`}
+      <span>${c.name}</span>
     </div>
   `).join("");
 }
@@ -248,7 +290,7 @@ function applyFilters() {
   const term = searchInput.value.trim().toLowerCase();
 
   const filtered = allProducts.filter(p => {
-    const matchesCategory = activeCategory === "All" || p.category === activeCategory;
+    const matchesCategory = normalizeCat(activeCategory) === "all" || normalizeCat(p.category) === normalizeCat(activeCategory);
     const matchesSearch = !term
       || (p.productName || "").toLowerCase().includes(term)
       || (p.description || "").toLowerCase().includes(term)
